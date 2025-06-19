@@ -10,11 +10,16 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class UsuarioService {
+
+    private static final String UPLOAD_DIR = "uploads/images";
 
     private final UsuarioRepository usuarioRepository;
 
@@ -28,15 +33,25 @@ public class UsuarioService {
         MultipartFile imagem = dto.getImagem();
         if (imagem != null && !imagem.isEmpty()) {
             try {
-                String nomeArquivo = UUID.randomUUID() + "_" + imagem.getOriginalFilename();
-                String caminho = "uploads/" + nomeArquivo; // ou outro diretório configurado
-                imagem.transferTo(new File(caminho));
-                usuario.setFoto(nomeArquivo); // apenas o nome ou caminho relativo
+                String nomeArquivo = salvarArquivo(imagem);
+                usuario.setFoto(nomeArquivo);
             } catch (IOException e) {
                 throw new RuntimeException("Erro ao salvar imagem", e);
             }
+        } else {
+            usuario.setFoto(null);
         }
 
         usuarioRepository.save(usuario);
+    }
+
+    private String salvarArquivo(MultipartFile file) throws IOException {
+        String nomeOriginal = file.getOriginalFilename();
+        String nomeArquivo = UUID.randomUUID() + "_" + nomeOriginal;
+
+        Path filePath = Paths.get(UPLOAD_DIR + nomeArquivo);
+        Files.copy(file.getInputStream(), filePath);
+
+        return nomeArquivo;
     }
 }

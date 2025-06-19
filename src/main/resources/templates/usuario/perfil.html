@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      lang="pt-BR"
+      layout:decorate="~{layout/layout}">
+
+<head>
+    <meta charset="UTF-8" />
+    <title th:text="#{perfil.title}">Perfil - Blog</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container d-flex flex-column align-items-start mt-5">
+        <div class="d-flex align-items-start mb-4 w-100">
+
+            <!-- Foto de Perfil -->
+            <div class="me-3">
+                <img th:src="${usuario.foto} != null ? '/uploads/' + ${usuario.foto} : '/images/user-default.webp'"
+                     th:alt="'Foto de ' + ${usuario.nome}"
+                     class="rounded-circle img-fluid"
+                     style="width: 200px; height: 200px; object-fit: cover;" />
+            </div>
+
+            <!-- Informações do Usuário -->
+            <div class="ms-4">
+                <h2 class="fw-bold" th:text="${usuario.nome}">Nome do Usuário</h2>
+                <p class="text-muted" th:text="${usuario.email}">email@exemplo.com</p>
+            </div>
+
+            <!-- Botões só para o usuário logado e proprietário do perfil -->
+            <div class="ms-auto" th:if="${isOwner}">
+                <a th:href="@{/logout}" class="btn btn-danger ms-2" title="Sair">
+                    <i class="bi bi-box-arrow-left"></i>
+                </a>
+                <a th:href="@{/usuario/edit}" class="btn btn-secondary" title="Editar perfil">
+                    <i class="bi bi-gear"></i>
+                </a>
+            </div>
+
+        </div>
+
+        <div class="d-flex justify-content-center align-items-center mb-3 gap-3 w-100">
+            <a th:if="${isOwner}"
+               th:href="@{/post/create}"
+               class="btn btn-success d-flex justify-content-center align-items-center">+</a>
+            <h2 class="mb-0 text-center" th:text="#{perfil.posts}">Postagens</h2>
+        </div>
+
+        <hr class="w-100" />
+    </div>
+</section>
+</body>
+</html>

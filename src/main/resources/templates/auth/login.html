@@ -31,13 +31,13 @@
                     <div class="mb-3">
                         <label for="username" class="form-label" th:text="#{login.email}">Email</label>
                         <input type="text" id="username" name="username" class="form-control"
-                               th:placeholder="#{login.email.placeholder}" required autofocus />
+                               th:placeholder="#{login.email.placeholder}" required autofocus value="manoela@manoela"/>
                     </div>
 
                     <div class="mb-4">
                         <label for="password" class="form-label" th:text="#{login.senha}">Senha</label>
                         <input type="password" id="password" name="password" class="form-control"
-                               th:placeholder="#{login.senha.placeholder}" required />
+                               th:placeholder="#{login.senha.placeholder}" required  value="manoela"/>
                     </div>
 
                     <button type="submit" class="btn btn-primary w-100 mb-3" th:text="#{login.entrar}">Entrar</button>

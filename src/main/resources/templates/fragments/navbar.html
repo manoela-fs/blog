@@ -63,7 +63,13 @@
                        sec:authentication="name"
                        th:text="#{navbar.profile}">Perfil</a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="perfilDropdown">
-                        <li><a class="dropdown-item" th:href="@{/perfil}" th:text="#{navbar.myProfile}">Meu Perfil</a></li>
+                        <li>
+                            <a class="dropdown-item"
+                               th:href="@{'/usuario/' + ${#authentication.principal.usuario.id}}"
+                               th:text="#{navbar.myProfile}">
+                                Meu Perfil
+                            </a>
+                        </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <form th:action="@{/logout}" method="post" style="display:inline;">
@@ -72,6 +78,7 @@
                         </li>
                     </ul>
                 </li>
+
             </ul>
 
         </div>
