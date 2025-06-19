@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title th:text="#{register.title}">Cadastro</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container d-flex justify-content-center align-items-center vh-100">
+        <div class="col-11 col-md-8 col-lg-5 border rounded shadow p-5 bg-light mx-auto">
+            <h1 class="text-center" th:text="#{register.title}">CADASTRO</h1>
+            <hr>
+            <form method="post" th:action="@{/register}" enctype="multipart/form-data">
+
+                <div class="mb-2">
+                    <label class="form-label" for="nome" th:text="#{register.name}">Nome</label>
+                    <input type="text" class="form-control" id="nome" name="nome" required
+                           th:placeholder="#{register.name.placeholder}" />
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label" for="email" th:text="#{register.email}">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required
+                           th:placeholder="#{register.email.placeholder}" />
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label" for="imagem" th:text="#{register.profile.photo}">Foto de perfil</label>
+                    <input class="form-control" type="file" id="imagem" name="imagem" accept="image/*" />
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label" for="idioma" th:text="#{register.language}">Idioma</label>
+                    <select class="form-select" id="idioma" name="idioma" required>
+                        <option value="pt-BR" th:text="#{register.language.portuguese}">Português (Brasil)</option>
+                        <option value="en" th:text="#{register.language.english}">Inglês</option>
+                        <option value="es" th:text="#{register.language.spanish}">Espanhol</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label" for="senha" th:text="#{register.password}">Senha</label>
+                    <input type="password" class="form-control" id="senha" name="senha" required
+                           th:placeholder="#{register.password.placeholder}" />
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100" th:text="#{register.submit}">Cadastrar</button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+</head>
+<body>
+<!-- Fragmento de Navbar -->
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+    <div class="container">
+
+        <a class="navbar-brand" th:href="@{/}" th:text="#{navbar.brand}">Blog</a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/posts}" th:text="#{navbar.posts}">Postagens</a>
+                </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="categoriasDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false"
+                       th:text="#{navbar.categories}">Categorias</a>
+                    <ul class="dropdown-menu" aria-labelledby="categoriasDropdown">
+                        <li><a class="dropdown-item" th:href="@{/categorias/1}" th:text="#{navbar.category1}">Categoria 1</a></li>
+                        <li><a class="dropdown-item" th:href="@{/categorias/2}" th:text="#{navbar.category2}">Categoria 2</a></li>
+                        <li><a class="dropdown-item" th:href="@{/categorias/3}" th:text="#{navbar.category3}">Categoria 3</a></li>
+                    </ul>
+                </li>
+            </ul>
+
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item dropdown me-3">
+                    <a class="nav-link dropdown-toggle" href="#" id="idiomaDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false"
+                       th:text="#{navbar.language}">Idioma</a>
+                    <ul class="dropdown-menu" aria-labelledby="languageDropdown">
+                        <li><a class="dropdown-item" th:href="@{__${currentUri}__(lang='pt-BR')}" th:text="#{register.language.portuguese}">Português (Brasil)</a></li>
+                        <li><a class="dropdown-item" th:href="@{__${currentUri}__(lang='en')}" th:text="#{register.language.english}">English</a></li>
+                        <li><a class="dropdown-item" th:href="@{__${currentUri}__(lang='es')}" th:text="#{register.language.spanish}">Español</a></li>
+                    </ul>
+                </li>
+
+                <!-- Não autenticados -->
+                <li class="nav-item" sec:authorize="isAnonymous()">
+                    <a class="nav-link" th:href="@{/login}" th:text="#{navbar.login}">Entrar</a>
+                </li>
+                <li class="nav-item" sec:authorize="isAnonymous()">
+                    <a class="nav-link" th:href="@{/register}" th:text="#{navbar.register}">Registrar</a>
+                </li>
+
+                <!-- Autenticados -->
+                <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                    <a class="nav-link dropdown-toggle" href="#" id="perfilDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false"
+                       sec:authentication="name"
+                       th:text="#{navbar.profile}">Perfil</a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="perfilDropdown">
+                        <li><a class="dropdown-item" th:href="@{/perfil}" th:text="#{navbar.myProfile}">Meu Perfil</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post" style="display:inline;">
+                                <button type="submit" class="dropdown-item" th:text="#{navbar.logout}">Sair</button>
+                            </form>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+
+        </div>
+    </div>
+</nav>
+</body>
+</html>
