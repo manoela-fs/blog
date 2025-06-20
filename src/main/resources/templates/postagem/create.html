@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      lang="pt-BR"
+      layout:decorate="~{layout/layout}">
+
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{post.criar.titulo}">Criar Novo Post</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container mt-5">
+        <div class="d-flex justify-content-center">
+            <div class="col-8 border rounded p-4 shadow-lg">
+                <h1 class="text-center mb-4" th:text="#{post.criar.titulo}">Criar Novo Post</h1>
+                <form th:action="@{/post/create}" method="post" enctype="multipart/form-data" th:object="${postagemCreateDTO}">
+
+                    <div class="form-group">
+                        <label for="titulo" class="my-2" th:text="#{post.titulo}">Título</label>
+                        <input type="text" class="form-control" id="titulo" th:field="*{titulo}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="conteudo" class="my-2" th:text="#{post.conteudo}">Conteúdo</label>
+                        <textarea class="form-control" id="conteudo" th:field="*{conteudo}" rows="5" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="categoriaId" class="my-2" th:text="#{post.categoria}">Categoria</label>
+                        <select th:field="*{categoriaId}" name="categoriaId" id="categoriaId" required>
+                            <option value="" disabled selected>Selecione uma categoria</option>
+                            <option th:each="categoria : ${categorias}"
+                                    th:value="${categoria.categoria.getId()}"
+                                    th:text="${categoria.nome}">
+                            </option>
+                        </select>
+
+                    </div>
+
+                    <div class="form-group my-2">
+                        <label th:text="#{post.imagem}">Imagem</label>
+                        <input type="file" class="form-control" id="imagem" th:field="*{imagem}">
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-6">
+                            <button type="submit" class="btn btn-primary w-100" th:text="#{botao.salvar}">Salvar</button>
+                        </div>
+                        <div class="col-6">
+                            <a th:href="@{'/usuario/' + ${#authentication.principal.id}}" class="btn btn-secondary w-100" th:text="#{botao.voltar}">Voltar</a>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>
