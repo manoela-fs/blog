@@ -34,6 +34,7 @@ public class AuthController {
     public String processRegister(@Valid @ModelAttribute("usuarioDTO") UsuarioDTO dto,
                                   BindingResult result,
                                   RedirectAttributes redirectAttributes) {
+        System.out.println(dto.toString());
         if (result.hasErrors()) {
             return "auth/register";
         }

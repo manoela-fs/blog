@@ -21,5 +21,5 @@ public class UsuarioDTO {
     @NotBlank(message = "O idioma é obrigatório")
     private String idioma;
 
-    private MultipartFile imagem;
+    private MultipartFile foto;
 }

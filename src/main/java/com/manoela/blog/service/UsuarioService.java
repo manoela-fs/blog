@@ -4,11 +4,11 @@ import com.manoela.blog.domain.usuario.Usuario;
 import com.manoela.blog.dto.UsuarioDTO;
 import com.manoela.blog.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,7 +19,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UsuarioService {
 
-    private static final String UPLOAD_DIR = "uploads/images";
+    @Value("${upload.dir}")
+    private String uploadDir;
 
     private final UsuarioRepository usuarioRepository;
 
@@ -30,10 +31,10 @@ public class UsuarioService {
         usuario.setSenha(new BCryptPasswordEncoder().encode(dto.getSenha()));
         usuario.setIdioma(dto.getIdioma());
 
-        MultipartFile imagem = dto.getImagem();
-        if (imagem != null && !imagem.isEmpty()) {
+        MultipartFile foto = dto.getFoto();
+        if (foto != null && !foto.isEmpty()) {
             try {
-                String nomeArquivo = salvarArquivo(imagem);
+                String nomeArquivo = salvarArquivo(foto);
                 usuario.setFoto(nomeArquivo);
             } catch (IOException e) {
                 throw new RuntimeException("Erro ao salvar imagem", e);
@@ -46,10 +47,12 @@ public class UsuarioService {
     }
 
     private String salvarArquivo(MultipartFile file) throws IOException {
-        String nomeOriginal = file.getOriginalFilename();
-        String nomeArquivo = UUID.randomUUID() + "_" + nomeOriginal;
+        // Cria o diretório caso não exista
+        Path dirPath = Paths.get(uploadDir);
 
-        Path filePath = Paths.get(UPLOAD_DIR + nomeArquivo);
+        // Gera nome único e salva
+        String nomeArquivo = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        Path filePath = dirPath.resolve(nomeArquivo);
         Files.copy(file.getInputStream(), filePath);
 
         return nomeArquivo;

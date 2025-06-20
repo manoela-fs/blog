@@ -12,28 +12,29 @@
         <div class="col-11 col-md-8 col-lg-5 border rounded shadow p-5 bg-light mx-auto">
             <h1 class="text-center" th:text="#{register.title}">CADASTRO</h1>
             <hr>
-            <form method="post" th:action="@{/register}" enctype="multipart/form-data">
+            <form method="post" th:action="@{/register}" enctype="multipart/form-data"
+                  th:object="${usuarioDTO}">
 
                 <div class="mb-2">
                     <label class="form-label" for="nome" th:text="#{register.name}">Nome</label>
-                    <input type="text" class="form-control" id="nome" name="nome" required
-                           th:placeholder="#{register.name.placeholder}" />
+                    <input type="text" class="form-control" id="nome" th:field="*{nome}"
+                           th:placeholder="#{register.name.placeholder}" required />
                 </div>
 
                 <div class="mb-2">
                     <label class="form-label" for="email" th:text="#{register.email}">Email</label>
-                    <input type="email" class="form-control" id="email" name="email" required
-                           th:placeholder="#{register.email.placeholder}" />
+                    <input type="email" class="form-control" id="email" th:field="*{email}"
+                           th:placeholder="#{register.email.placeholder}" required />
                 </div>
 
                 <div class="mb-2">
-                    <label class="form-label" for="imagem" th:text="#{register.profile.photo}">Foto de perfil</label>
-                    <input class="form-control" type="file" id="imagem" name="imagem" accept="image/*" />
+                    <label class="form-label" for="foto" th:text="#{register.profile.photo}">Foto de perfil</label>
+                    <input class="form-control" type="file" id="foto" th:field="*{foto}" accept="image/*" />
                 </div>
 
                 <div class="mb-2">
                     <label class="form-label" for="idioma" th:text="#{register.language}">Idioma</label>
-                    <select class="form-select" id="idioma" name="idioma" required>
+                    <select class="form-select" id="idioma" th:field="*{idioma}" required>
                         <option value="pt-BR" th:text="#{register.language.portuguese}">Português (Brasil)</option>
                         <option value="en" th:text="#{register.language.english}">Inglês</option>
                         <option value="es" th:text="#{register.language.spanish}">Espanhol</option>
@@ -42,8 +43,8 @@
 
                 <div class="mb-4">
                     <label class="form-label" for="senha" th:text="#{register.password}">Senha</label>
-                    <input type="password" class="form-control" id="senha" name="senha" required
-                           th:placeholder="#{register.password.placeholder}" />
+                    <input type="password" class="form-control" id="senha" th:field="*{senha}"
+                           th:placeholder="#{register.password.placeholder}" required />
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100" th:text="#{register.submit}">Cadastrar</button>

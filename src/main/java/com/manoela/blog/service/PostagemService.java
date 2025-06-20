@@ -13,6 +13,7 @@ import com.manoela.blog.repository.CategoriaTraducaoRepository;
 import com.manoela.blog.repository.PostagemRepository;
 import com.manoela.blog.repository.PostagemTraducaoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +30,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PostagemService {
 
-    private static final String UPLOAD_DIR = "uploads/images/";
+    @Value("${upload.dir}")
+    private String uploadDir;
 
     private final PostagemRepository postagemRepository;
     private final PostagemTraducaoRepository postagemTraducaoRepository;
@@ -74,10 +76,12 @@ public class PostagemService {
     }
 
     private String salvarArquivo(MultipartFile file) throws IOException {
-        String nomeOriginal = file.getOriginalFilename();
-        String nomeArquivo = UUID.randomUUID() + "_" + nomeOriginal;
+        // Cria o diretório caso não exista
+        Path dirPath = Paths.get(uploadDir);
 
-        Path filePath = Paths.get(UPLOAD_DIR + nomeArquivo);
+        // Gera nome único e salva
+        String nomeArquivo = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        Path filePath = dirPath.resolve(nomeArquivo);
         Files.copy(file.getInputStream(), filePath);
 
         return nomeArquivo;
