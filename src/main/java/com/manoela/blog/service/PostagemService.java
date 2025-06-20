@@ -8,10 +8,8 @@ import com.manoela.blog.domain.postagem.PostagemTraducao;
 import com.manoela.blog.domain.postagem.PostagemTraducaoId;
 import com.manoela.blog.domain.usuario.Usuario;
 import com.manoela.blog.dto.PostagemCreateDTO;
-import com.manoela.blog.repository.CategoriaRepository;
-import com.manoela.blog.repository.CategoriaTraducaoRepository;
-import com.manoela.blog.repository.PostagemRepository;
-import com.manoela.blog.repository.PostagemTraducaoRepository;
+import com.manoela.blog.dto.PostagemDTO;
+import com.manoela.blog.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -37,6 +35,7 @@ public class PostagemService {
     private final PostagemTraducaoRepository postagemTraducaoRepository;
     private final CategoriaRepository categoriaRepository;
     private final CategoriaTraducaoRepository categoriaTraducaoRepository;
+    private final CurtidaRepository curtidaRepository;
     private final LibreTranslateClient translateClient;
 
     private static final List<String> IDIOMAS_SUPORTADOS = List.of("pt-BR", "en", "es");
@@ -100,4 +99,48 @@ public class PostagemService {
         String idiomaAtual = LocaleContextHolder.getLocale().toLanguageTag();
         return categoriaTraducaoRepository.findById_Idioma(idiomaAtual);
     }
+
+    public List<PostagemTraducao> buscarPostagensDoUsuarioPorIdioma(Usuario usuario) {
+        String idiomaAtual = LocaleContextHolder.getLocale().toLanguageTag();
+
+        List<Postagem> postagens = postagemRepository.findByUsuario_Id(usuario.getId());
+
+        return postagens.stream()
+                .map(postagem -> postagemTraducaoRepository
+                        .findById_PostagemIdAndId_Idioma(postagem.getId(), idiomaAtual))
+                .filter(traducao -> traducao != null)
+                .toList();
+    }
+
+    public List<PostagemDTO> buscarPostagensDoUsuarioPorIdiomaEStatusCurtida(Usuario usuarioLogado, Usuario donoPerfil) {
+        String idiomaAtual = LocaleContextHolder.getLocale().toLanguageTag();
+
+        // Busca postagens do dono do perfil
+        List<Postagem> postagens = postagemRepository.findByUsuario_Id(donoPerfil.getId());
+
+        // Mapeia para DTO com info de curtida
+        return postagens.stream().map(postagem -> {
+            var traducao = postagemTraducaoRepository.findById_PostagemIdAndId_Idioma(postagem.getId(), idiomaAtual);
+
+            if (traducao == null) return null;
+
+            long totalCurtidas = curtidaRepository.countByPostagemId(postagem.getId());
+            boolean curtidoPeloUsuario = false;
+
+            if (usuarioLogado != null) {
+                curtidoPeloUsuario = curtidaRepository.existsByPostagemIdAndUsuarioId(postagem.getId(), usuarioLogado.getId());
+            }
+
+            return new PostagemDTO(
+                    postagem.getId(),
+                    traducao.getTitulo(),
+                    traducao.getConteudo(),
+                    postagem.getImagem(),
+                    postagem.getDataCriacao(),
+                    curtidoPeloUsuario,
+                    totalCurtidas
+            );
+        }).filter(dto -> dto != null).toList();
+    }
+
 }

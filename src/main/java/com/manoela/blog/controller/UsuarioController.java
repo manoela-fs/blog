@@ -2,8 +2,10 @@ package com.manoela.blog.controller;
 
 import com.manoela.blog.domain.categoria.CategoriaTraducao;
 import com.manoela.blog.domain.usuario.Usuario;
+import com.manoela.blog.dto.PostagemDTO;
 import com.manoela.blog.repository.CategoriaTraducaoRepository;
 import com.manoela.blog.repository.UsuarioRepository;
+import com.manoela.blog.service.PostagemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,23 +22,31 @@ public class UsuarioController {
 
     private final UsuarioRepository usuarioRepository;
     private final CategoriaTraducaoRepository categoriaTraducaoRepository;
-
+    private final PostagemService postagemService;
 
     @GetMapping("/usuario/{id}")
     public String perfil(@PathVariable String id, Model model, Principal principal) {
-        // Busca o usuário pelo ID
-        Usuario usuario = usuarioRepository.findById(id)
+        Usuario donoPerfil = usuarioRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Usuário não encontrado"));
 
-        // Verifica se o usuário autenticado é o dono do perfil
-        boolean isOwner = principal != null && principal.getName().equals(usuario.getEmail());
+        boolean isOwner = principal != null && principal.getName().equals(donoPerfil.getEmail());
 
-        // Adiciona atributos à página
-        model.addAttribute("usuario", usuario);
+        Usuario usuarioLogado = null;
+        if (principal != null) {
+            usuarioLogado = usuarioRepository.findByEmail(principal.getName())
+                    .orElse(null);
+        }
+
+        List<PostagemDTO> postagensDTO = postagemService.buscarPostagensDoUsuarioPorIdiomaEStatusCurtida(usuarioLogado, donoPerfil);
+
+        model.addAttribute("usuario", donoPerfil);
         model.addAttribute("isOwner", isOwner);
+        model.addAttribute("postagens", postagensDTO);
 
         return "usuario/perfil";
     }
+
+
 
     public List<CategoriaTraducao> buscarCategoriasPorIdioma(Usuario usuario) {
         return categoriaTraducaoRepository.findById_Idioma(usuario.getIdioma());

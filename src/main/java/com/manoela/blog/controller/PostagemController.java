@@ -1,21 +1,26 @@
 package com.manoela.blog.controller;
 
+import com.manoela.blog.domain.usuario.Usuario;
+import com.manoela.blog.repository.UsuarioRepository;
 import com.manoela.blog.security.CustomUserDetails;
 import com.manoela.blog.dto.PostagemCreateDTO;
+import com.manoela.blog.service.CurtidaService;
 import com.manoela.blog.service.PostagemService;
+import com.manoela.blog.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/post")
@@ -23,6 +28,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class PostagemController {
 
     private final PostagemService postagemService;
+    private final UsuarioRepository usuarioRepository;
+    private final CurtidaService curtidaService;
 
     @GetMapping("/create")
     public String showCreateForm(Model model) {
@@ -52,5 +59,32 @@ public class PostagemController {
             return "postagem/create";
         }
     }
+
+    @PostMapping("/{id}/curtir")
+    @ResponseBody
+    public ResponseEntity<?> curtir(@PathVariable String id, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body("Usuário não autenticado");
+        }
+
+        try {
+            boolean curtiu = curtidaService.toggleCurtida(id, userDetails.getUsuario().getId());
+            int totalCurtidas = curtidaService.totalCurtidas(id);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("curtido", curtiu);
+            response.put("totalCurtidas", totalCurtidas);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erro ao processar curtida");
+        }
+    }
+
+
+
+
+
+
 
 }
