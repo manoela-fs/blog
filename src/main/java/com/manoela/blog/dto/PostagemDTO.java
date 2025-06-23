@@ -15,6 +15,8 @@ public class PostagemDTO {
     private String conteudo;
     private String imagem;
     private LocalDateTime dataCriacao;
-    private boolean curtidoPeloUsuario;
     private long totalCurtidas;
+    private boolean curtidoPeloUsuario;
+    private String username;
+    private String foto;
 }

@@ -3,6 +3,8 @@ package com.manoela.blog.repository;
 import com.manoela.blog.domain.postagem.PostagemTraducao;
 import com.manoela.blog.domain.postagem.PostagemTraducaoId;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,4 +20,16 @@ public interface PostagemTraducaoRepository extends JpaRepository<PostagemTraduc
 
     // Buscar todas as postagens em um idioma específico
     List<PostagemTraducao> findById_Idioma(String idioma);
+
+    List<PostagemTraducao> findById_IdiomaAndId_PostagemIdIn(String idioma, List<String> postagemIds);
+
+    @Query("""
+    SELECT pt
+    FROM PostagemTraducao pt
+    JOIN FETCH pt.postagem p
+    WHERE pt.id.idioma = :idioma
+    ORDER BY p.dataCriacao DESC
+""")
+    List<PostagemTraducao> buscarPostagensTraduzidasPorIdiomaOrdenadas(@Param("idioma") String idioma);
+
 }

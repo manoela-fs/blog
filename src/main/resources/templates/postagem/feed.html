@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      lang="pt-BR"
+      layout:decorate="~{layout/layout}">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Feed - Blog</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Feed de Postagens</h1>
+
+        <!-- Mensagem de alerta (caso exista) -->
+        <div th:if="${mensagem != null}"
+             th:class="'alert alert-' + ${tipoMensagem} + ' alert-dismissible fade show'"
+             role="alert">
+            <span th:text="${mensagem}">Mensagem</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Caso não haja postagens -->
+        <div th:if="${#lists.isEmpty(postagens)}" class="alert alert-info text-center">
+            Nenhuma postagem disponível no momento.
+        </div>
+
+        <!-- Postagens -->
+        <div class="row justify-content-center" th:each="postagem : ${postagens}">
+            <div class="col-12 col-md-10 mb-4">
+                <div class="card shadow-sm">
+
+                    <!-- Postagem com imagem -->
+                    <div class="row g-0" th:if="${postagem.imagem != null}">
+                        <div class="col-md-6">
+                            <img th:src="@{'/uploads/images/' + ${postagem.imagem}}"
+                                 class="img-fluid rounded-start w-100"
+                                 alt="Imagem da postagem"
+                                 style="max-height: 330px; object-fit: cover;">
+                        </div>
+
+                        <div class="col-md-6 p-4 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex align-items-center mb-3">
+                                    <!-- Foto do usuário -->
+                                    <img th:if="${postagem.foto != null}"
+                                         th:src="@{'/uploads/images/' + ${postagem.foto}}"
+                                         class="img-fluid rounded-circle me-3"
+                                         style="width: 40px; height: 40px; object-fit: cover;"
+                                         th:alt="'Foto de ' + ${postagem.username}" />
+
+                                    <img th:unless="${postagem.foto != null}"
+                                         src="/images/user-default.webp"
+                                         class="img-fluid rounded-circle me-3"
+                                         style="width: 40px; height: 40px; object-fit: cover;"
+                                         th:alt="'Foto padrão'" />
+
+                                    <div>
+                                        <h6 class="mb-0" th:text="${postagem.username}">Autor</h6>
+                                        <small class="text-muted" th:text="${#temporals.format(postagem.dataCriacao, 'dd/MM/yyyy HH:mm')}">Data</small>
+                                    </div>
+                                </div>
+
+                                <h3 class="card-title mb-2">
+                                    <a th:href="@{'/post/' + ${postagem.id} + '/show'}"
+                                       class="text-decoration-none text-dark"
+                                       th:text="${postagem.titulo}">Título</a>
+                                </h3>
+                                <p class="card-text" th:text="${#strings.abbreviate(postagem.conteudo, 150)}">Conteúdo</p>
+                            </div>
+
+                            <div>
+                                <hr>
+                                <div class="d-flex align-items-center">
+                                    <button type="button"
+                                            class="btn btn-link p-0 me-2"
+                                            th:attr="data-post-id=${postagem.id}"
+                                            style="font-size: 1.5rem;"
+                                            th:classappend="${postagem.curtidoPeloUsuario} ? 'text-danger' : 'text-muted'">
+                                        <i th:classappend="${postagem.curtidoPeloUsuario} ? 'bi-heart-fill' : 'bi-heart'"></i>
+                                    </button>
+                                    <span th:text="${postagem.totalCurtidas}">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Postagem sem imagem -->
+                    <div class="p-4" th:if="${postagem.imagem == null}">
+                        <div class="d-flex align-items-start mb-3">
+                            <!-- Foto do usuário -->
+                            <img th:if="${postagem.foto != null}"
+                                 th:src="@{'/uploads/images/' + ${postagem.foto}}"
+                                 class="img-fluid rounded-circle me-3"
+                                 style="width: 40px; height: 40px; object-fit: cover;"
+                                 th:alt="'Foto de ' + ${postagem.username}" />
+
+                            <img th:unless="${postagem.foto != null}"
+                                 src="/images/user-default.webp"
+                                 class="img-fluid rounded-circle me-3"
+                                 style="width: 40px; height: 40px; object-fit: cover;"
+                                 th:alt="'Foto padrão'" />
+
+                            <div>
+                                <h6 class="m-0" th:text="${postagem.username}">Autor</h6>
+                                <small class="text-muted" th:text="${#temporals.format(postagem.dataCriacao, 'dd/MM/yyyy HH:mm')}">Data</small>
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold mb-2">
+                            <a th:href="@{'/post/' + ${postagem.id} + '/show'}"
+                               class="text-decoration-none text-dark"
+                               th:text="${postagem.titulo}">Título</a>
+                        </h5>
+                        <p class="mb-2" th:text="${#strings.abbreviate(postagem.conteudo, 160)}">Conteúdo</p>
+
+                        <hr>
+
+                        <div class="d-flex align-items-center">
+                            <button type="button"
+                                    class="btn btn-link p-0 me-2"
+                                    th:attr="data-post-id=${postagem.id}"
+                                    style="font-size: 1.5rem;"
+                                    th:classappend="${postagem.curtidoPeloUsuario} ? 'text-danger' : 'text-muted'">
+                                <i th:classappend="${postagem.curtidoPeloUsuario} ? 'bi-heart-fill' : 'bi-heart'"></i>
+                            </button>
+                            <span th:text="${postagem.totalCurtidas}">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div layout:fragment="scripts">
+    <script>
+        async function toggleCurtida(button) {
+            const postId = button.getAttribute('data-post-id');
+            try {
+                const response = await fetch(`/post/${postId}/curtir`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                });
+
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    return;
+                }
+
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                if (!response.ok) {
+                    alert('Erro ao atualizar curtida');
+                    return;
+                }
+
+                const data = await response.json();
+                const icon = button.querySelector('i');
+                if (data.curtido) {
+                    icon.classList.remove('bi-heart');
+                    icon.classList.add('bi-heart-fill');
+                    button.classList.remove('text-muted');
+                    button.classList.add('text-danger');
+                } else {
+                    icon.classList.remove('bi-heart-fill');
+                    icon.classList.add('bi-heart');
+                    button.classList.remove('text-danger');
+                    button.classList.add('text-muted');
+                }
+
+                button.nextElementSibling.textContent = data.totalCurtidas;
+            } catch (error) {
+                alert('Erro de comunicação com o servidor');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('button[data-post-id]').forEach(button => {
+                button.addEventListener('click', () => toggleCurtida(button));
+            });
+        });
+    </script>
+</div>
+
+</body>
+</html>

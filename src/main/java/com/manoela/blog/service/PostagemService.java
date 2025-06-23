@@ -22,8 +22,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+/**
+ * Serviço responsável pelas operações relacionadas às postagens,
+ * incluindo criação, tradução, consulta e contagem de curtidas.
+ */
 @Service
 @RequiredArgsConstructor
 public class PostagemService {
@@ -40,6 +46,14 @@ public class PostagemService {
 
     private static final List<String> IDIOMAS_SUPORTADOS = List.of("pt-BR", "en", "es");
 
+    /**
+     * Cria uma nova postagem com traduções automáticas nos idiomas suportados.
+     *
+     * @param dto     dados da postagem.
+     * @param usuario autor da postagem.
+     * @return a postagem salva.
+     * @throws IOException caso ocorra erro ao salvar imagem.
+     */
     @Transactional
     public Postagem criarPostagem(PostagemCreateDTO dto, Usuario usuario) throws IOException {
         Categoria categoria = categoriaRepository.findById(dto.getCategoriaId())
@@ -74,11 +88,17 @@ public class PostagemService {
         return postagem;
     }
 
+    /**
+     * Salva o arquivo da imagem enviada.
+     *
+     * @param file arquivo da imagem.
+     * @return nome do arquivo salvo.
+     * @throws IOException caso ocorra erro ao salvar o arquivo.
+     */
     private String salvarArquivo(MultipartFile file) throws IOException {
-        // Cria o diretório caso não exista
         Path dirPath = Paths.get(uploadDir);
+        Files.createDirectories(dirPath);
 
-        // Gera nome único e salva
         String nomeArquivo = UUID.randomUUID() + "_" + file.getOriginalFilename();
         Path filePath = dirPath.resolve(nomeArquivo);
         Files.copy(file.getInputStream(), filePath);
@@ -86,6 +106,14 @@ public class PostagemService {
         return nomeArquivo;
     }
 
+    /**
+     * Salva uma tradução para a postagem especificada.
+     *
+     * @param postagem postagem original.
+     * @param idioma idioma da tradução.
+     * @param titulo título traduzido.
+     * @param conteudo conteúdoa ser traduzido.
+     */
     private void salvarTraducao(Postagem postagem, String idioma, String titulo, String conteudo) {
         PostagemTraducao traducao = new PostagemTraducao();
         traducao.setId(new PostagemTraducaoId(postagem.getId(), idioma));
@@ -95,52 +123,139 @@ public class PostagemService {
         postagemTraducaoRepository.save(traducao);
     }
 
+    /**
+     * Busca todas as categorias traduzidas para o idioma atual do sistema.
+     *
+     * @return lista de traduções de categorias.
+     */
     public List<CategoriaTraducao> buscarCategoriasPorIdiomaAtual() {
         String idiomaAtual = LocaleContextHolder.getLocale().toLanguageTag();
         return categoriaTraducaoRepository.findById_Idioma(idiomaAtual);
     }
 
-    public List<PostagemTraducao> buscarPostagensDoUsuarioPorIdioma(Usuario usuario) {
-        String idiomaAtual = LocaleContextHolder.getLocale().toLanguageTag();
+    /**
+     * Busca as postagens do usuário no idioma especificado e inclui o total de curtidas.
+     *
+     * @param usuarioId id do usuário.
+     * @param idioma idioma desejado.
+     * @return lista de DTOs de postagem com tradução e curtidas.
+     */
+    public List<PostagemDTO> buscarPostagensDoUsuario(String usuarioId, String idioma, String idUsuarioLogado) {
+        List<Postagem> postagens = postagemRepository.findByUsuario_IdOrderByDataCriacaoDesc(usuarioId);
+        List<String> ids = postagens.stream().map(Postagem::getId).toList();
 
-        List<Postagem> postagens = postagemRepository.findByUsuario_Id(usuario.getId());
+        Map<String, PostagemTraducao> traducoes = postagemTraducaoRepository
+                .findById_IdiomaAndId_PostagemIdIn(idioma, ids)
+                .stream()
+                .collect(Collectors.toMap(
+                        t -> t.getPostagem().getId(),
+                        t -> t
+                ));
 
-        return postagens.stream()
-                .map(postagem -> postagemTraducaoRepository
-                        .findById_PostagemIdAndId_Idioma(postagem.getId(), idiomaAtual))
-                .filter(traducao -> traducao != null)
-                .toList();
-    }
+        Map<String, Long> mapaCurtidas = curtidaRepository.contarCurtidasPorPostagens(ids)
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (String) row[0],
+                        row -> (Long) row[1]
+                ));
 
-    public List<PostagemDTO> buscarPostagensDoUsuarioPorIdiomaEStatusCurtida(Usuario usuarioLogado, Usuario donoPerfil) {
-        String idiomaAtual = LocaleContextHolder.getLocale().toLanguageTag();
+        final List<String> idsCurtidosPeloUsuario;
+        if (idUsuarioLogado != null && !idUsuarioLogado.isBlank()) {
+            idsCurtidosPeloUsuario = curtidaRepository
+                    .findByUsuarioIdAndPostagemIdIn(idUsuarioLogado, ids)
+                    .stream()
+                    .map(c -> c.getPostagem().getId())
+                    .toList();
+        } else {
+            idsCurtidosPeloUsuario = List.of();
+        }
 
-        // Busca postagens do dono do perfil
-        List<Postagem> postagens = postagemRepository.findByUsuario_Id(donoPerfil.getId());
+        // Carregar os usuários das postagens para pegar username e foto
+        Map<String, Usuario> usuariosMap = postagens.stream()
+                .map(Postagem::getUsuario)
+                .distinct()
+                .collect(Collectors.toMap(Usuario::getId, u -> u));
 
-        // Mapeia para DTO com info de curtida
-        return postagens.stream().map(postagem -> {
-            var traducao = postagemTraducaoRepository.findById_PostagemIdAndId_Idioma(postagem.getId(), idiomaAtual);
+        return postagens.stream().map(post -> {
+            PostagemTraducao traducao = traducoes.get(post.getId());
+            boolean curtido = idsCurtidosPeloUsuario.contains(post.getId());
 
-            if (traducao == null) return null;
-
-            long totalCurtidas = curtidaRepository.countByPostagemId(postagem.getId());
-            boolean curtidoPeloUsuario = false;
-
-            if (usuarioLogado != null) {
-                curtidoPeloUsuario = curtidaRepository.existsByPostagemIdAndUsuarioId(postagem.getId(), usuarioLogado.getId());
-            }
+            Usuario usuario = usuariosMap.get(post.getUsuario().getId());
 
             return new PostagemDTO(
-                    postagem.getId(),
+                    post.getId(),
                     traducao.getTitulo(),
                     traducao.getConteudo(),
-                    postagem.getImagem(),
-                    postagem.getDataCriacao(),
-                    curtidoPeloUsuario,
-                    totalCurtidas
+                    post.getImagem(),
+                    post.getDataCriacao(),
+                    mapaCurtidas.getOrDefault(post.getId(), 0L).intValue(),
+                    curtido,
+                    usuario != null ? usuario.getNome() : null,   // username
+                    usuario != null ? usuario.getFoto() : null    // foto
             );
-        }).filter(dto -> dto != null).toList();
+        }).toList();
     }
+
+    /**
+     * Busca todas as postagens traduzidas para o idioma atual,
+     * ordenadas da mais recente para a mais antiga, incluindo curtidas.
+     *
+     * @param idUsuarioLogado ID do usuário logado (pode ser null).
+     * @return lista de DTOs de postagem traduzida com curtidas.
+     */
+    public List<PostagemDTO> buscarPostagens(String idUsuarioLogado) {
+        String idioma = LocaleContextHolder.getLocale().toLanguageTag();
+
+        List<PostagemTraducao> traducoes = postagemTraducaoRepository
+                .buscarPostagensTraduzidasPorIdiomaOrdenadas(idioma);
+
+        List<String> ids = traducoes.stream()
+                .map(t -> t.getPostagem().getId())
+                .toList();
+
+        Map<String, Long> mapaCurtidas = curtidaRepository.contarCurtidasPorPostagens(ids)
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (String) row[0],
+                        row -> (Long) row[1]
+                ));
+
+        final List<String> idsCurtidosPeloUsuario;
+        if (idUsuarioLogado != null && !idUsuarioLogado.isBlank()) {
+            idsCurtidosPeloUsuario = curtidaRepository
+                    .findByUsuarioIdAndPostagemIdIn(idUsuarioLogado, ids)
+                    .stream()
+                    .map(c -> c.getPostagem().getId())
+                    .toList();
+        } else {
+            idsCurtidosPeloUsuario = List.of();
+        }
+
+        // Carregar usuários das postagens para username e foto
+        Map<String, Usuario> usuariosMap = traducoes.stream()
+                .map(t -> t.getPostagem().getUsuario())
+                .distinct()
+                .collect(Collectors.toMap(Usuario::getId, u -> u));
+
+        return traducoes.stream()
+                .map(t -> {
+                    Postagem p = t.getPostagem();
+                    boolean curtido = idsCurtidosPeloUsuario.contains(p.getId());
+                    Usuario usuario = usuariosMap.get(p.getUsuario().getId());
+
+                    return new PostagemDTO(
+                            p.getId(),
+                            t.getTitulo(),
+                            t.getConteudo(),
+                            p.getImagem(),
+                            p.getDataCriacao(),
+                            mapaCurtidas.getOrDefault(p.getId(), 0L).intValue(),
+                            curtido,
+                            usuario != null ? usuario.getNome() : null,
+                            usuario != null ? usuario.getFoto() : null
+                    );
+                }).toList();
+    }
+
 
 }

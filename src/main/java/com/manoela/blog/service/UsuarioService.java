@@ -57,4 +57,9 @@ public class UsuarioService {
 
         return nomeArquivo;
     }
+
+    public Usuario buscarUsuarioPorId(String id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com id: " + id));
+    }
 }

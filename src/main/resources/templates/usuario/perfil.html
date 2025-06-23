@@ -15,7 +15,7 @@
         <div class="d-flex align-items-start mb-4 w-100">
             <!-- Foto de Perfil -->
             <div class="me-3">
-                <img th:src="${usuario.foto} != null ? '/uploads/' + ${usuario.foto} : '/images/user-default.webp'"
+                <img th:src="${usuario.foto} != null ? '/uploads/images/' + ${usuario.foto} : '/images/user-default.webp'"
                      th:alt="'Foto de ' + ${usuario.nome}"
                      class="rounded-circle img-fluid"
                      style="width: 200px; height: 200px; object-fit: cover;" />
@@ -75,10 +75,11 @@
                                 <div class="col-md-6 p-4 d-flex flex-column justify-content-between">
                                     <div>
                                         <div class="d-flex align-items-center mb-3">
-                                            <img th:src="${usuario.foto != null} ? '/uploads/images/' + usuario.foto : '/images/user-default.webp'"
-                                                 alt="Foto de perfil"
+                                            <img th:src="${usuario.foto} != null ? '/uploads/images/' + ${usuario.foto} : '/images/user-default.webp'"
+                                                 th:alt="'Foto de ' + ${usuario.nome}"
                                                  class="img-fluid rounded-circle me-3"
                                                  style="width: 40px; height: 40px; object-fit: cover;" />
+
                                             <div class="ms-3">
                                                 <h6 class="m-0" th:text="${usuario.nome}">Nome</h6>
                                                 <small class="text-muted" th:text="${#temporals.format(postagem.dataCriacao, 'dd/MM/yyyy HH:mm')}">Data</small>
@@ -102,24 +103,20 @@
                                         <p class="card-text" th:text="${#strings.abbreviate(postagem.conteudo, 150)}">Conteúdo</p>
                                     </div>
 
-                                    <!-- Botão de Curtida -->
-                                    <div class="d-flex align-items-center mt-2">
-                                        <button
-                                                type="button"
-                                                class="btn btn-link p-0 me-2"
-                                                th:attr="data-post-id=${postagem.id}"
-                                                style="font-size: 1.5rem; color: #e0245e;"
-                                                th:classappend="${postagem.curtidoPeloUsuario} ? 'text-danger' : 'text-muted'">
-                                            <i th:classappend="${postagem.curtidoPeloUsuario} ? 'bi-heart-fill' : 'bi-heart'"></i>
-                                        </button>
-                                        <span th:text="${postagem.totalCurtidas}">0</span>
-                                    </div>
-
                                     <div>
                                         <hr>
-                                        <p class="card-text">
-                                            <small class="text-body-secondary" th:text="#{post.commentsAndLikes}">0 Comentários — 0❤️</small>
-                                        </p>
+                                        <!-- Botão de Curtida -->
+                                        <div class="d-flex align-items-center mt-2">
+                                            <button
+                                                    type="button"
+                                                    class="btn btn-link p-0 me-2"
+                                                    th:attr="data-post-id=${postagem.id}"
+                                                    style="font-size: 1.5rem; color: #e0245e;"
+                                                    th:classappend="${postagem.curtidoPeloUsuario} ? 'text-danger' : 'text-muted'">
+                                                <i th:classappend="${postagem.curtidoPeloUsuario} ? 'bi-heart-fill' : 'bi-heart'"></i>
+                                            </button>
+                                            <span th:text="${postagem.totalCurtidas}">0</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -127,8 +124,8 @@
                             <!-- Postagem SEM imagem (tweet style) -->
                             <div th:if="${postagem.imagem == null}" class="p-4">
                                 <div class="d-flex align-items-start mb-3">
-                                    <img th:src="${usuario.foto != null ? '/uploads/images/' + usuario.foto : '/images/user-default.webp'}"
-                                         alt="Foto de perfil"
+                                    <img th:src="${usuario.foto} != null ? '/uploads/images/' + ${usuario.foto} : '/images/user-default.webp'"
+                                         th:alt="'Foto de ' + ${usuario.nome}"
                                          class="img-fluid rounded-circle me-3"
                                          style="width: 40px; height: 40px; object-fit: cover;" />
 
@@ -153,23 +150,21 @@
                                 </h5>
                                 <p class="mb-2" th:text="${#strings.abbreviate(postagem.conteudo, 160)}">Conteúdo</p>
 
-                                <!-- Botão de Curtida -->
-                                <div class="d-flex align-items-center mt-2">
-                                    <button
-                                            type="button"
-                                            class="btn btn-link p-0 me-2"
-                                            th:attr="data-post-id=${postagem.id}"
-                                            style="font-size: 1.5rem; color: #e0245e;"
-                                            th:classappend="${postagem.curtidoPeloUsuario} ? 'text-danger' : 'text-muted'">
-                                        <i th:classappend="${postagem.curtidoPeloUsuario} ? 'bi-heart-fill' : 'bi-heart'"></i>
-                                    </button>
-                                    <span th:text="${postagem.totalCurtidas}">0</span>
-                                </div>
-
                                 <hr>
 
                                 <div class="d-flex justify-content-between mt-2">
-                                    <small class="text-body-secondary" th:text="#{post.commentsAndLikes}">0 Comentários — 0 ❤️</small>
+                                    <!-- Botão de Curtida -->
+                                    <div class="d-flex align-items-center mt-2">
+                                        <button
+                                                type="button"
+                                                class="btn btn-link p-0 me-2"
+                                                th:attr="data-post-id=${postagem.id}"
+                                                style="font-size: 1.5rem; color: #e0245e;"
+                                                th:classappend="${postagem.curtidoPeloUsuario} ? 'text-danger' : 'text-muted'">
+                                            <i th:classappend="${postagem.curtidoPeloUsuario} ? 'bi-heart-fill' : 'bi-heart'"></i>
+                                        </button>
+                                        <span th:text="${postagem.totalCurtidas}">0</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>

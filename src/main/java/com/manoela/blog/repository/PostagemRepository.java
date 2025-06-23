@@ -8,5 +8,8 @@ import java.util.List;
 
 @Repository
 public interface PostagemRepository extends JpaRepository<Postagem, String> {
-    List<Postagem> findByUsuario_Id(String usuarioId);
+
+    // Retorna as postagens do usuário em ordem decrescente de data de criação (mais recentes primeiro)
+    List<Postagem> findByUsuario_IdOrderByDataCriacaoDesc(String usuarioId);
+
 }

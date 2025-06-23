@@ -7,6 +7,7 @@ import com.manoela.blog.repository.CategoriaTraducaoRepository;
 import com.manoela.blog.repository.UsuarioRepository;
 import com.manoela.blog.service.PostagemService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +17,9 @@ import java.security.Principal;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+/**
+ * Controller para as operações relacionadas ao usuário e seu perfil.
+ */
 @Controller
 @RequiredArgsConstructor
 public class UsuarioController {
@@ -24,6 +28,14 @@ public class UsuarioController {
     private final CategoriaTraducaoRepository categoriaTraducaoRepository;
     private final PostagemService postagemService;
 
+    /**
+     * Exibe o perfil do usuário identificado pelo id.
+     *
+     * @param id        id do usuário dono do perfil
+     * @param model     model para passar atributos para a view
+     * @param principal usuário autenticado (se houver)
+     * @return nome da view para o perfil do usuário
+     */
     @GetMapping("/usuario/{id}")
     public String perfil(@PathVariable String id, Model model, Principal principal) {
         Usuario donoPerfil = usuarioRepository.findById(id)
@@ -31,13 +43,18 @@ public class UsuarioController {
 
         boolean isOwner = principal != null && principal.getName().equals(donoPerfil.getEmail());
 
-        Usuario usuarioLogado = null;
+        String idUsuarioLogado = null;
         if (principal != null) {
-            usuarioLogado = usuarioRepository.findByEmail(principal.getName())
+            idUsuarioLogado = usuarioRepository.findByEmail(principal.getName())
+                    .map(Usuario::getId)
                     .orElse(null);
         }
 
-        List<PostagemDTO> postagensDTO = postagemService.buscarPostagensDoUsuarioPorIdiomaEStatusCurtida(usuarioLogado, donoPerfil);
+        // Usar idioma da sessão, não o idioma do dono do perfil
+        String idiomaAtual = LocaleContextHolder.getLocale().toLanguageTag();
+
+        List<PostagemDTO> postagensDTO = postagemService
+                .buscarPostagensDoUsuario(donoPerfil.getId(), idiomaAtual, idUsuarioLogado);
 
         model.addAttribute("usuario", donoPerfil);
         model.addAttribute("isOwner", isOwner);
@@ -46,8 +63,12 @@ public class UsuarioController {
         return "usuario/perfil";
     }
 
-
-
+    /**
+     * Busca as categorias traduzidas para o idioma do usuário.
+     *
+     * @param usuario usuário para extrair o idioma
+     * @return lista de categorias traduzidas
+     */
     public List<CategoriaTraducao> buscarCategoriasPorIdioma(Usuario usuario) {
         return categoriaTraducaoRepository.findById_Idioma(usuario.getIdioma());
     }

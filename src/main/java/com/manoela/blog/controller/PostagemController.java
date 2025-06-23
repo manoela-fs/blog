@@ -1,6 +1,8 @@
 package com.manoela.blog.controller;
 
+import com.manoela.blog.domain.postagem.Postagem;
 import com.manoela.blog.domain.usuario.Usuario;
+import com.manoela.blog.dto.PostagemDTO;
 import com.manoela.blog.repository.UsuarioRepository;
 import com.manoela.blog.security.CustomUserDetails;
 import com.manoela.blog.dto.PostagemCreateDTO;
@@ -20,6 +22,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -28,8 +31,24 @@ import java.util.Map;
 public class PostagemController {
 
     private final PostagemService postagemService;
-    private final UsuarioRepository usuarioRepository;
-    private final CurtidaService curtidaService;
+    private final UsuarioService usuarioService;
+
+    @GetMapping("/feed")
+    public String feed(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        String idUsuarioLogado = null;
+
+        if (userDetails != null) {
+            idUsuarioLogado = userDetails.getId();
+        }
+
+        // Busca as postagens com info de curtidas e tradução para o idioma atual
+        List<PostagemDTO> postagens = postagemService.buscarPostagens(idUsuarioLogado);
+
+        model.addAttribute("postagens", postagens);
+
+        return "postagem/feed";
+    }
+
 
     @GetMapping("/create")
     public String showCreateForm(Model model) {
@@ -59,32 +78,5 @@ public class PostagemController {
             return "postagem/create";
         }
     }
-
-    @PostMapping("/{id}/curtir")
-    @ResponseBody
-    public ResponseEntity<?> curtir(@PathVariable String id, @AuthenticationPrincipal CustomUserDetails userDetails) {
-        if (userDetails == null) {
-            return ResponseEntity.status(401).body("Usuário não autenticado");
-        }
-
-        try {
-            boolean curtiu = curtidaService.toggleCurtida(id, userDetails.getUsuario().getId());
-            int totalCurtidas = curtidaService.totalCurtidas(id);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("curtido", curtiu);
-            response.put("totalCurtidas", totalCurtidas);
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Erro ao processar curtida");
-        }
-    }
-
-
-
-
-
-
 
 }
