@@ -39,7 +39,7 @@ public class CurtidaController {
         String usuarioId = userDetails.getId();
 
         boolean curtido = curtidaService.toggleCurtida(usuarioId, id);
-        int totalCurtidas = curtidaService.contarCurtidas(id);
+        int totalCurtidas = curtidaService.totalCurtidas(id);
 
         Map<String, Object> response = new HashMap<>();
         response.put("curtido", curtido);

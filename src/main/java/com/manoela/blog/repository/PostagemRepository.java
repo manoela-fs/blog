@@ -12,4 +12,6 @@ public interface PostagemRepository extends JpaRepository<Postagem, String> {
     // Retorna as postagens do usuário em ordem decrescente de data de criação (mais recentes primeiro)
     List<Postagem> findByUsuario_IdOrderByDataCriacaoDesc(String usuarioId);
 
+    List<Postagem> findByCategoriaId(Integer categoriaId);
+
 }

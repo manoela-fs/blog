@@ -29,9 +29,12 @@
                        data-bs-toggle="dropdown" aria-expanded="false"
                        th:text="#{navbar.categories}">Categorias</a>
                     <ul class="dropdown-menu" aria-labelledby="categoriasDropdown">
-                        <li><a class="dropdown-item" th:href="@{/categorias/1}" th:text="#{navbar.category1}">Categoria 1</a></li>
-                        <li><a class="dropdown-item" th:href="@{/categorias/2}" th:text="#{navbar.category2}">Categoria 2</a></li>
-                        <li><a class="dropdown-item" th:href="@{/categorias/3}" th:text="#{navbar.category3}">Categoria 3</a></li>
+                        <li th:each="categoria : ${categorias}">
+                            <a class="dropdown-item"
+                               th:href="@{/post/feed(categoria=${categoria.id.categoriaId})}"
+                               th:text="${categoria.nome}">
+                            </a>
+                        </li>
                     </ul>
                 </li>
             </ul>

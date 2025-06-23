@@ -4,25 +4,16 @@ import com.manoela.blog.domain.usuario.Usuario;
 import com.manoela.blog.dto.UsuarioDTO;
 import com.manoela.blog.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class UsuarioService {
 
-    @Value("${upload.dir}")
-    private String uploadDir;
-
     private final UsuarioRepository usuarioRepository;
+    private final ArquivoService arquivoService;
 
     public void createUsuario(UsuarioDTO dto) {
         Usuario usuario = new Usuario();
@@ -34,9 +25,9 @@ public class UsuarioService {
         MultipartFile foto = dto.getFoto();
         if (foto != null && !foto.isEmpty()) {
             try {
-                String nomeArquivo = salvarArquivo(foto);
+                String nomeArquivo = arquivoService.salvarArquivo(foto);
                 usuario.setFoto(nomeArquivo);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 throw new RuntimeException("Erro ao salvar imagem", e);
             }
         } else {
@@ -46,20 +37,19 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
-    private String salvarArquivo(MultipartFile file) throws IOException {
-        // Cria o diretório caso não exista
-        Path dirPath = Paths.get(uploadDir);
-
-        // Gera nome único e salva
-        String nomeArquivo = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        Path filePath = dirPath.resolve(nomeArquivo);
-        Files.copy(file.getInputStream(), filePath);
-
-        return nomeArquivo;
-    }
-
     public Usuario buscarUsuarioPorId(String id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado com id: " + id));
+    }
+
+    public Usuario buscarUsuarioPorEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com e-mail: " + email));
+    }
+
+    public String buscarIdPorEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .map(Usuario::getId)
+                .orElse(null);
     }
 }

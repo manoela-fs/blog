@@ -10,12 +10,11 @@ import com.manoela.blog.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Serviço responsável pelo gerenciamento de curtidas em postagens.
- * Oferece métodos para curtir, descurtir, verificar existência de curtidas, contar total de curtidas
- * e alternar o estado da curtida (toggle).
  */
 @Service
 @RequiredArgsConstructor
@@ -25,99 +24,79 @@ public class CurtidaService {
     private final UsuarioRepository usuarioRepository;
     private final PostagemRepository postagemRepository;
 
-    /**
-     * Registra uma curtida de um usuário em uma postagem.
-     *
-     * @param usuarioId  ID do usuário que está curtindo.
-     * @param postagemId ID da postagem a ser curtida.
-     * @throws RuntimeException     se o usuário ou a postagem não forem encontrados.
-     * @throws IllegalStateException se a curtida já existir.
-     */
     public void curtir(String usuarioId, String postagemId) {
         CurtidaId id = new CurtidaId(usuarioId, postagemId);
 
         if (curtidaRepository.existsById(id)) {
-            throw new IllegalStateException("Já curtido");
+            throw new IllegalStateException("Usuário já curtiu esta postagem.");
         }
 
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-
-        Postagem postagem = postagemRepository.findById(postagemId)
-                .orElseThrow(() -> new RuntimeException("Postagem não encontrada"));
+        Usuario usuario = buscarUsuario(usuarioId);
+        Postagem postagem = buscarPostagem(postagemId);
 
         Curtida curtida = new Curtida(id, usuario, postagem, null);
         curtidaRepository.save(curtida);
     }
 
-    /**
-     * Remove a curtida de um usuário em uma postagem.
-     *
-     * @param usuarioId  ID do usuário que deseja descurtir.
-     * @param postagemId ID da postagem a ser descurtida.
-     * @throws RuntimeException se a curtida não existir.
-     */
     public void descurtir(String usuarioId, String postagemId) {
         CurtidaId id = new CurtidaId(usuarioId, postagemId);
 
         Curtida curtida = curtidaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Curtida não encontrada"));
+                .orElseThrow(() -> new RuntimeException("Curtida não encontrada para remoção."));
 
         curtidaRepository.delete(curtida);
     }
 
-    /**
-     * Alterna o estado da curtida de um usuário em uma postagem.
-     * Se o usuário já curtiu a postagem, remove a curtida. Caso contrário, adiciona a curtida.
-     *
-     * @param usuarioId  ID do usuário.
-     * @param postagemId ID da postagem.
-     * @return true se a postagem foi curtida, false se a curtida foi removida.
-     * @throws RuntimeException se o usuário ou a postagem não forem encontrados.
-     */
     public boolean toggleCurtida(String usuarioId, String postagemId) {
         CurtidaId id = new CurtidaId(usuarioId, postagemId);
 
-        Optional<Curtida> curtidaExistente = curtidaRepository.findById(id);
-        if (curtidaExistente.isPresent()) {
-            // Já curtiu, então remove a curtida (descurtir)
-            curtidaRepository.delete(curtidaExistente.get());
-            return false;
-        } else {
-            // Não curtiu ainda, então cria a curtida
-            Usuario usuario = usuarioRepository.findById(usuarioId)
-                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-
-            Postagem postagem = postagemRepository.findById(postagemId)
-                    .orElseThrow(() -> new RuntimeException("Postagem não encontrada"));
-
-            Curtida curtida = new Curtida(id, usuario, postagem, null);
-            curtidaRepository.save(curtida);
-            return true;
-        }
+        return curtidaRepository.findById(id)
+                .map(curtida -> {
+                    curtidaRepository.delete(curtida);
+                    return false;
+                })
+                .orElseGet(() -> {
+                    Usuario usuario = buscarUsuario(usuarioId);
+                    Postagem postagem = buscarPostagem(postagemId);
+                    curtidaRepository.save(new Curtida(id, usuario, postagem, null));
+                    return true;
+                });
     }
 
-    /**
-     * Verifica se um usuário já curtiu uma determinada postagem.
-     *
-     * @param usuarioId  ID do usuário.
-     * @param postagemId ID da postagem.
-     * @return true se já tiver curtido, false caso contrário.
-     */
-    public boolean existeCurtida(String usuarioId, String postagemId) {
+    public boolean foiCurtidoPorUsuario(String usuarioId, String postagemId) {
         return curtidaRepository.existsByPostagemIdAndUsuarioId(postagemId, usuarioId);
     }
 
-    /**
-     * Retorna o número total de curtidas de uma postagem.
-     *
-     * @param postagemId ID da postagem.
-     * @return número de curtidas.
-     * @throws RuntimeException se a postagem não for encontrada.
-     */
-    public int contarCurtidas(String postagemId) {
-        Postagem postagem = postagemRepository.findById(postagemId)
-                .orElseThrow(() -> new RuntimeException("Postagem não encontrada"));
-        return curtidaRepository.countByPostagem(postagem);
+    public int totalCurtidas(String postagemId) {
+        return (int) curtidaRepository.countByPostagemId(postagemId);
+    }
+
+    public Map<String, Long> contarCurtidasPorPostagens(List<String> idsPostagens) {
+        return curtidaRepository.contarCurtidasPorPostagens(idsPostagens)
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (String) row[0],
+                        row -> (Long) row[1]
+                ));
+    }
+
+    public List<String> buscarPostagensCurtidasPorUsuario(String usuarioId, List<String> idsPostagens) {
+        if (usuarioId == null || usuarioId.isBlank()) return List.of();
+
+        return curtidaRepository.findByUsuarioIdAndPostagemIdIn(usuarioId, idsPostagens)
+                .stream()
+                .map(c -> c.getPostagem().getId())
+                .toList();
+    }
+
+    // Métodos auxiliares internos
+    private Usuario buscarUsuario(String id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado: " + id));
+    }
+
+    private Postagem buscarPostagem(String id) {
+        return postagemRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Postagem não encontrada: " + id));
     }
 }

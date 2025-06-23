@@ -58,7 +58,12 @@
                                          th:alt="'Foto padrão'" />
 
                                     <div>
-                                        <h6 class="mb-0" th:text="${postagem.username}">Autor</h6>
+                                        <h6 class="m-0">
+                                            <a th:href="@{'/usuario/' + ${postagem.idUsuario}}"
+                                               class="text-decoration-none text-dark"
+                                               th:text="${postagem.username}">Autor</a>
+                                        </h6>
+
                                         <small class="text-muted" th:text="${#temporals.format(postagem.dataCriacao, 'dd/MM/yyyy HH:mm')}">Data</small>
                                     </div>
                                 </div>
@@ -104,7 +109,11 @@
                                  th:alt="'Foto padrão'" />
 
                             <div>
-                                <h6 class="m-0" th:text="${postagem.username}">Autor</h6>
+                                <h6 class="m-0">
+                                    <a th:href="@{'/usuario/' + ${postagem.idUsuario}}"
+                                       class="text-decoration-none text-dark"
+                                       th:text="${postagem.username}">Autor</a>
+                                </h6>
                                 <small class="text-muted" th:text="${#temporals.format(postagem.dataCriacao, 'dd/MM/yyyy HH:mm')}">Data</small>
                             </div>
                         </div>

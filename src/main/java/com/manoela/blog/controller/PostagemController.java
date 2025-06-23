@@ -6,6 +6,7 @@ import com.manoela.blog.dto.PostagemDTO;
 import com.manoela.blog.repository.UsuarioRepository;
 import com.manoela.blog.security.CustomUserDetails;
 import com.manoela.blog.dto.PostagemCreateDTO;
+import com.manoela.blog.service.CategoriaService;
 import com.manoela.blog.service.CurtidaService;
 import com.manoela.blog.service.PostagemService;
 import com.manoela.blog.service.UsuarioService;
@@ -32,28 +33,37 @@ public class PostagemController {
 
     private final PostagemService postagemService;
     private final UsuarioService usuarioService;
+    private final CategoriaService categoriaService;
 
     @GetMapping("/feed")
-    public String feed(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public String feed(@RequestParam(value = "categoria", required = false) Integer categoriaId,
+                       Model model,
+                       @AuthenticationPrincipal CustomUserDetails userDetails) {
         String idUsuarioLogado = null;
 
         if (userDetails != null) {
             idUsuarioLogado = userDetails.getId();
         }
 
-        // Busca as postagens com info de curtidas e tradução para o idioma atual
-        List<PostagemDTO> postagens = postagemService.buscarPostagens(idUsuarioLogado);
+        List<PostagemDTO> postagens;
+
+        if (categoriaId != null) {
+            // Busca postagens filtradas por categoria
+            postagens = postagemService.buscarPostagensPorCategoria(categoriaId, idUsuarioLogado);
+        } else {
+            // Busca todas as postagens
+            postagens = postagemService.buscarPostagens(idUsuarioLogado);
+        }
 
         model.addAttribute("postagens", postagens);
 
         return "postagem/feed";
     }
 
-
     @GetMapping("/create")
     public String showCreateForm(Model model) {
         model.addAttribute("postagemCreateDTO", new PostagemCreateDTO());
-        model.addAttribute("categorias", postagemService.buscarCategoriasPorIdiomaAtual());
+        model.addAttribute("categorias", categoriaService.listarCategoriasTraduzidas());
         return "postagem/create";
     }
 
@@ -64,7 +74,7 @@ public class PostagemController {
                                         Model model,
                                         @AuthenticationPrincipal CustomUserDetails userDetails) {
         if (result.hasErrors()) {
-            model.addAttribute("categorias", postagemService.buscarCategoriasPorIdiomaAtual());
+            model.addAttribute("categorias", categoriaService.listarCategoriasTraduzidas());
             return "postagem/create";
         }
 
@@ -73,10 +83,24 @@ public class PostagemController {
             redirectAttributes.addFlashAttribute("successMessageKey", "post.criar.sucesso");
             return "redirect:/usuario/" + userDetails.getId();
         } catch (Exception e) {
-            model.addAttribute("categorias", postagemService.buscarCategoriasPorIdiomaAtual());
+            model.addAttribute("categorias", categoriaService.listarCategoriasTraduzidas());
             model.addAttribute("errorMessage", "Erro ao criar postagem: " + e.getMessage());
             return "postagem/create";
         }
+    }
+
+
+    @PostMapping("/{id}/delete")
+    public String deletarPostagem(@PathVariable String id, Principal principal, RedirectAttributes redirectAttributes) {
+        try {
+            postagemService.excluirPostagem(id, principal.getName());
+            redirectAttributes.addFlashAttribute("mensagem", "Postagem excluída com sucesso!");
+            redirectAttributes.addFlashAttribute("tipoMensagem", "success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("mensagem", "Erro ao excluir a postagem.");
+            redirectAttributes.addFlashAttribute("tipoMensagem", "danger");
+        }
+        return "redirect:/usuario/" + usuarioService.buscarIdPorEmail(principal.getName());
     }
 
 }
