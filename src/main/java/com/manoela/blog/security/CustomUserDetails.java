@@ -12,7 +12,7 @@ import java.util.UUID;
 @Getter
 public class CustomUserDetails implements UserDetails {
 
-    private final Usuario usuario;
+    private Usuario usuario;
 
     public CustomUserDetails(Usuario usuario) {
         this.usuario = usuario;
@@ -36,6 +36,10 @@ public class CustomUserDetails implements UserDetails {
 
     public String getId() {
         return usuario.getId();
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 
     @Override

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      lang="pt-BR"
+      layout:decorate="~{layout/layout}">
+
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{usuario.editar.titulo}">Editar Perfil</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container mt-5">
+        <div class="d-flex justify-content-center">
+            <div class="col-8 border rounded p-4 shadow-lg">
+                <h1 class="text-center mb-4" th:text="#{usuario.editar.titulo}">Editar Perfil</h1>
+
+                <form th:action="@{'/usuario/edit'}"
+                      method="post"
+                      enctype="multipart/form-data"
+                      th:object="${usuarioEditDTO}">
+
+                    <!-- Nome -->
+                    <div class="form-group my-2">
+                        <label for="nome" th:text="#{usuario.nome}">Nome</label>
+                        <input type="text" class="form-control" id="nome" th:field="*{nome}" required>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-group my-2">
+                        <label for="email" th:text="#{usuario.email}">E-mail</label>
+                        <input type="email" class="form-control" id="email" th:field="*{email}" required>
+                    </div>
+
+                    <!-- Idioma -->
+                    <div class="form-group my-2">
+                        <label for="idioma" th:text="#{navbar.language}">Idioma</label>
+                        <select class="form-control" id="idioma" th:field="*{idioma}" required>
+                            <option value="pt-BR" th:text="#{idioma.pt}">Português</option>
+                            <option value="en" th:text="#{idioma.en}">Inglês</option>
+                            <option value="es" th:text="#{idioma.es}">Espanhol</option>
+                        </select>
+                    </div>
+
+                    <!-- Foto -->
+                    <div class="form-group my-2">
+                        <label for="foto" class="form-label d-block" th:text="#{usuario.foto}">Foto de Perfil</label>
+
+                        <img id="previewImagem"
+                             th:src="${usuarioEditDTO.fotoAtual != null} ? '/uploads/images/' + ${usuarioEditDTO.fotoAtual} : ''"
+                             alt="Preview da foto"
+                             class="img-thumbnail my-2"
+                             style="max-height: 300px; display: [[${usuarioEditDTO.fotoAtual != null} ? 'block' : 'none']]">
+
+
+                        <input type="file" class="form-control" id="foto" th:field="*{foto}" onchange="previewImagemSelecionada(this)">
+                    </div>
+
+                    <!-- Senha atual -->
+                    <div class="form-group my-2">
+                        <label for="senhaAtual" th:text="#{usuario.senha.atual}">Senha atual</label>
+                        <input type="password" class="form-control" id="senhaAtual" th:field="*{senhaAtual}" required>
+                    </div>
+
+                    <!-- Nova senha -->
+                    <div class="form-group my-2">
+                        <label for="novaSenha" th:text="#{usuario.senha.nova}">Nova senha</label>
+                        <input type="password" class="form-control" id="novaSenha" th:field="*{novaSenha}">
+                    </div>
+
+                    <!-- Confirmar nova senha -->
+                    <div class="form-group my-2">
+                        <label for="confirmarSenha" th:text="#{usuario.senha.confirmar}">Confirmar nova senha</label>
+                        <input type="password" class="form-control" id="confirmarSenha" th:field="*{confirmarSenha}">
+                    </div>
+
+                    <!-- Botões -->
+                    <div class="row mt-4">
+                        <div class="col-6">
+                            <button type="submit" class="btn btn-primary w-100" th:text="#{botao.salvar}">Salvar</button>
+                        </div>
+                        <div class="col-6">
+                            <a th:href="@{'/usuario/' + ${#authentication.principal.id}}"
+                               class="btn btn-secondary w-100" th:text="#{botao.voltar}">Voltar</a>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div layout:fragment="scripts">
+        <!-- Script para atualizar a prévia dinamicamente -->
+        <script>
+            function previewImagemSelecionada(input) {
+                const imagemPreview = document.getElementById('previewImagem');
+                const file = input.files[0];
+
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        imagemPreview.src = e.target.result;
+                        imagemPreview.classList.remove('d-none');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        </script>
+    </div>
+</section>
+
+</body>
+</html>
