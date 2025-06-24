@@ -32,23 +32,31 @@
 
                     <div class="form-group">
                         <label for="categoriaId" class="my-2" th:text="#{post.categoria}">Categoria</label>
-                        <select th:field="*{categoriaId}" name="categoriaId" id="categoriaId" required>
+                        <select class="form-select" th:field="*{categoriaId}" name="categoriaId" id="categoriaId" required>
                             <option value="" disabled>Selecione uma categoria</option>
                             <option th:each="categoria : ${categorias}"
-                                    th:value="${categoria.id}"
+                                    th:value="${categoria.id.categoriaId}"
                                     th:text="${categoria.nome}"
-                                    th:selected="${categoria.id == postagemEditDTO.categoriaId}">
+                                    th:selected="${categoria.id.categoriaId == categoriaId}">
                             </option>
                         </select>
+
                     </div>
 
                     <div class="form-group my-2">
-                        <label th:text="#{post.imagem}">Imagem (opcional)</label>
-                        <input type="file" class="form-control" id="imagem" th:field="*{imagem}">
-                        <small class="form-text text-muted" th:if="${postagemEditDTO.imagem}">
-                            Imagem atual: <span th:text="${postagemEditDTO.imagem}"></span>
-                        </small>
+                        <label for="imagem" class="form-label d-block" th:text="#{post.imagem}">Imagem</label>
+
+                        <img id="previewImagem"
+                             th:src="${postagemEditDTO.imagemAtual != null} ? '/uploads/images/' + ${postagemEditDTO.imagemAtual} : ''"
+                             th:classappend="${postagemEditDTO.imagemAtual == null} ? 'd-none' : ''"
+                             alt="Preview da imagem"
+                             class="img-thumbnail my-2"
+                             style="max-height: 300px; display: block;">
+
+                        <input type="file" class="form-control" id="imagem" th:field="*{imagem}" onchange="previewImagemSelecionada(this)">
                     </div>
+
+
 
                     <div class="row mt-4">
                         <div class="col-6">
@@ -63,6 +71,26 @@
             </div>
         </div>
     </div>
+</section>
+<section>
+    <div layout:fragment="scripts">
+        <script>
+            function previewImagemSelecionada(input) {
+                const imagemPreview = document.getElementById('previewImagem');
+                const file = input.files[0];
+
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        imagemPreview.src = e.target.result;
+                        imagemPreview.classList.remove('d-none');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        </script>
+    </div>
+
 </section>
 </body>
 </html>

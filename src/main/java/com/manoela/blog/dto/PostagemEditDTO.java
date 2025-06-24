@@ -6,10 +6,10 @@ import org.springframework.web.multipart.MultipartFile;
 @Data
 public class PostagemEditDTO {
 
-    private Long id;
+    private String id;
     private String titulo;
     private String conteudo;
-    private Long categoriaId;
-    private MultipartFile imagem;  // para upload
+    private Integer categoriaId;
+    private MultipartFile imagem;
     private String imagemAtual;
 }

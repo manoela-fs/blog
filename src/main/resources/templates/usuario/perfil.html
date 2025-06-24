@@ -77,7 +77,7 @@
                                         <div class="d-flex align-items-center mb-3">
                                             <img th:src="${usuario.foto} != null ? '/uploads/images/' + ${usuario.foto} : '/images/user-default.webp'"
                                                  th:alt="'Foto de ' + ${usuario.nome}"
-                                                 class="img-fluid rounded-circle me-3"
+                                                 class="img-fluid rounded-circle"
                                                  style="width: 40px; height: 40px; object-fit: cover;" />
 
                                             <div class="ms-3">
@@ -133,10 +133,10 @@
                                 <div class="d-flex align-items-start mb-3">
                                     <img th:src="${usuario.foto} != null ? '/uploads/images/' + ${usuario.foto} : '/images/user-default.webp'"
                                          th:alt="'Foto de ' + ${usuario.nome}"
-                                         class="img-fluid rounded-circle me-3"
+                                         class="img-fluid rounded-circle"
                                          style="width: 40px; height: 40px; object-fit: cover;" />
 
-                                    <div>
+                                    <div class="ms-3">
                                         <h6 class="m-0" th:text="${usuario.nome}">Nome</h6>
                                         <small class="text-muted" th:text="${#temporals.format(postagem.dataCriacao, 'dd/MM/yyyy HH:mm')}">Data</small>
                                     </div>

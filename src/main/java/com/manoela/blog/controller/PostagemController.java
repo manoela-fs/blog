@@ -3,13 +3,11 @@ package com.manoela.blog.controller;
 import com.manoela.blog.domain.postagem.Postagem;
 import com.manoela.blog.domain.usuario.Usuario;
 import com.manoela.blog.dto.PostagemDTO;
+import com.manoela.blog.dto.PostagemEditDTO;
 import com.manoela.blog.repository.UsuarioRepository;
 import com.manoela.blog.security.CustomUserDetails;
 import com.manoela.blog.dto.PostagemCreateDTO;
-import com.manoela.blog.service.CategoriaService;
-import com.manoela.blog.service.CurtidaService;
-import com.manoela.blog.service.PostagemService;
-import com.manoela.blog.service.UsuarioService;
+import com.manoela.blog.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +32,7 @@ public class PostagemController {
     private final PostagemService postagemService;
     private final UsuarioService usuarioService;
     private final CategoriaService categoriaService;
+    private final TraducaoService traducaoService;
 
     @GetMapping("/feed")
     public String feed(@RequestParam(value = "categoria", required = false) Integer categoriaId,
@@ -88,6 +87,66 @@ public class PostagemController {
             return "postagem/create";
         }
     }
+
+    @GetMapping("/{id}/edit")
+    public String showEditForm(@PathVariable String id,
+                               Model model,
+                               @AuthenticationPrincipal CustomUserDetails userDetails,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            Postagem postagem = postagemService.buscarPostagemPorId(id);
+
+            if (!postagem.getUsuario().getId().equals(userDetails.getId())) {
+                redirectAttributes.addFlashAttribute("mensagem", "Você não tem permissão para editar esta postagem.");
+                redirectAttributes.addFlashAttribute("tipoMensagem", "danger");
+                return "redirect:/usuario/" + userDetails.getId();
+            }
+
+            PostagemEditDTO dto = new PostagemEditDTO();
+            dto.setId(postagem.getId());
+            dto.setTitulo(traducaoService.buscarTraducao(postagem, userDetails.getUsuario().getIdioma()).getTitulo());
+            dto.setConteudo(traducaoService.buscarTraducao(postagem, userDetails.getUsuario().getIdioma()).getConteudo());
+            dto.setCategoriaId(postagem.getCategoria().getId());
+            dto.setImagemAtual(postagem.getImagem());
+
+            model.addAttribute("postagemEditDTO", dto);
+
+            return "postagem/edit";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("mensagem", "Erro ao carregar a postagem.");
+            redirectAttributes.addFlashAttribute("tipoMensagem", "danger");
+            return "redirect:/usuario/" + userDetails.getId();
+        }
+    }
+
+    @PostMapping("/{id}/edit")
+    public String processarEdicaoPostagem(@PathVariable String id,
+                                          @Valid @ModelAttribute("postagemCreateDTO") PostagemEditDTO dto,
+                                          BindingResult result,
+                                          Model model,
+                                          RedirectAttributes redirectAttributes,
+                                          @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (result.hasErrors()) {
+            model.addAttribute("categorias", categoriaService.listarCategoriasTraduzidas());
+            model.addAttribute("postagemId", id);
+            return "postagem/edit";
+        }
+
+        try {
+            postagemService.salvarEdicao(dto, userDetails.getUsuario());
+            redirectAttributes.addFlashAttribute("successMessageKey", "post.editar.sucesso");
+            return "redirect:/usuario/" + userDetails.getId();
+        } catch (SecurityException e) {
+            redirectAttributes.addFlashAttribute("mensagem", "Você não tem permissão para editar esta postagem.");
+            redirectAttributes.addFlashAttribute("tipoMensagem", "danger");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("mensagem", "Erro ao editar a postagem.");
+            redirectAttributes.addFlashAttribute("tipoMensagem", "danger");
+        }
+
+        return "redirect:/usuario/" + userDetails.getId();
+    }
+
 
 
     @PostMapping("/{id}/delete")

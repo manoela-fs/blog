@@ -44,6 +44,11 @@ public class TraducaoService {
                 ));
     }
 
+    public PostagemTraducao buscarTraducao(Postagem postagem, String idioma) {
+        return postagemTraducaoRepository.findById(new PostagemTraducaoId(postagem.getId(), idioma))
+                .orElseThrow(() -> new RuntimeException("Tradução da postagem não encontrada"));
+    }
+
 
 }
 

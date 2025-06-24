@@ -2,26 +2,20 @@ package com.manoela.blog.service;
 
 import com.manoela.blog.client.LibreTranslateClient;
 import com.manoela.blog.domain.categoria.Categoria;
-import com.manoela.blog.domain.categoria.CategoriaTraducao;
 import com.manoela.blog.domain.postagem.Postagem;
 import com.manoela.blog.domain.postagem.PostagemTraducao;
-import com.manoela.blog.domain.postagem.PostagemTraducaoId;
 import com.manoela.blog.domain.usuario.Usuario;
 import com.manoela.blog.dto.PostagemCreateDTO;
 import com.manoela.blog.dto.PostagemDTO;
+import com.manoela.blog.dto.PostagemEditDTO;
 import com.manoela.blog.repository.*;
 import com.manoela.blog.util.IdiomaUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -29,11 +23,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PostagemService {
 
-    @Value("${upload.dir}")
-    private String uploadDir;
-
     private final PostagemRepository postagemRepository;
-    private final PostagemTraducaoRepository postagemTraducaoRepository;
     private final CategoriaService categoriaService;
     private final CurtidaService curtidaService;
     private final ArquivoService arquivoService;
@@ -72,25 +62,44 @@ public class PostagemService {
     }
 
     @Transactional
-    public void salvarEdicao(String postagemId, String novoTitulo, String novoConteudo, Usuario usuario) {
-        Postagem postagem = postagemRepository.findById(postagemId)
+    public void salvarEdicao(PostagemEditDTO dto, Usuario usuario) throws IOException {
+        Postagem postagem = postagemRepository.findById(String.valueOf(dto.getId()))
                 .orElseThrow(() -> new RuntimeException("Postagem não encontrada"));
 
         if (!postagem.getUsuario().getId().equals(usuario.getId())) {
             throw new SecurityException("Você não tem permissão para editar esta postagem.");
         }
 
+        // Atualiza categoria se foi alterada
+        if (!Objects.equals(postagem.getCategoria().getId(), dto.getCategoriaId())) {
+            Categoria novaCategoria = categoriaService.buscarPorId(dto.getCategoriaId());
+            postagem.setCategoria(novaCategoria);
+        }
+
+        // Atualiza imagem se for enviada uma nova
+        if (dto.getImagem() != null && !dto.getImagem().isEmpty()) {
+            if (postagem.getImagem() != null) {
+                arquivoService.excluirArquivo(postagem.getImagem());
+            }
+            String novoNomeArquivo = arquivoService.salvarArquivo(dto.getImagem());
+            postagem.setImagem(novoNomeArquivo);
+        }
+
+        postagemRepository.save(postagem);
+
+        // Atualiza traduções
         String idiomaOrigem = usuario.getIdioma();
-        traducaoService.salvarTraducao(postagem, idiomaOrigem, novoTitulo, novoConteudo);
+        traducaoService.salvarTraducao(postagem, idiomaOrigem, dto.getTitulo(), dto.getConteudo());
 
         for (String idiomaAlvo : IDIOMAS_SUPORTADOS) {
             if (!idiomaAlvo.equals(idiomaOrigem)) {
-                String tituloTraduzido = traducaoClient.traduzir(novoTitulo, idiomaOrigem, idiomaAlvo);
-                String conteudoTraduzido = traducaoClient.traduzir(novoConteudo, idiomaOrigem, idiomaAlvo);
+                String tituloTraduzido = traducaoClient.traduzir(dto.getTitulo(), idiomaOrigem, idiomaAlvo);
+                String conteudoTraduzido = traducaoClient.traduzir(dto.getConteudo(), idiomaOrigem, idiomaAlvo);
                 traducaoService.salvarTraducao(postagem, idiomaAlvo, tituloTraduzido, conteudoTraduzido);
             }
         }
     }
+
 
     @Transactional
     public void excluirPostagem(String postagemId, String emailUsuarioLogado) {
@@ -216,6 +225,11 @@ public class PostagemService {
                     );
                 })
                 .toList();
+    }
+
+    public Postagem buscarPostagemPorId(String id) {
+        return postagemRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Postagem não encontrada"));
     }
 
 }
