@@ -10,90 +10,110 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Optional;
+
+/**
+ * Serviço responsável pelas operações relacionadas a usuários.
+ * Inclui criação, edição, e busca de usuários.
+ */
 @Service
 @RequiredArgsConstructor
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final ArquivoService arquivoService;
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    /**
+     * Cria um novo usuário a partir do DTO fornecido.
+     *
+     * @param dto Objeto contendo os dados do novo usuário.
+     */
     public void createUsuario(UsuarioDTO dto) {
         Usuario usuario = new Usuario();
         usuario.setNome(dto.getNome());
         usuario.setEmail(dto.getEmail());
-        usuario.setSenha(new BCryptPasswordEncoder().encode(dto.getSenha()));
+        usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
         usuario.setIdioma(dto.getIdioma());
-
-        MultipartFile foto = dto.getFoto();
-        if (foto != null && !foto.isEmpty()) {
-            try {
-                String nomeArquivo = arquivoService.salvarArquivo(foto);
-                usuario.setFoto(nomeArquivo);
-            } catch (Exception e) {
-                throw new RuntimeException("Erro ao salvar imagem", e);
-            }
-        } else {
-            usuario.setFoto(null);
-        }
-
+        usuario.setFoto(arquivoService.salvarSeValido(dto.getFoto()));
         usuarioRepository.save(usuario);
     }
 
+    /**
+     * Edita os dados de um usuário existente, validando senha atual e verificando duplicidade de e-mail.
+     *
+     * @param dto           DTO com os dados atualizados.
+     * @param usuarioLogado Usuário atualmente autenticado.
+     */
     public void editarUsuario(UsuarioEditDTO dto, Usuario usuarioLogado) {
         Usuario usuario = buscarUsuarioPorId(usuarioLogado.getId());
 
-        PasswordEncoder encoder = new BCryptPasswordEncoder();
+        validarSenhaAtual(dto.getSenhaAtual(), usuario.getSenha());
+        validarEmailNaoDuplicado(dto.getEmail(), usuario.getId());
 
-        // Verificação da senha atual
-        if (!encoder.matches(dto.getSenhaAtual(), usuario.getSenha())) {
-            throw new RuntimeException("Senha atual incorreta");
-        }
-
-        // Verificação de e-mail duplicado (em outro usuário)
-        usuarioRepository.findByEmail(dto.getEmail())
-                .ifPresent(usuarioExistente -> {
-                    if (!usuarioExistente.getId().equals(usuario.getId())) {
-                        throw new RuntimeException("E-mail já está em uso por outro usuário");
-                    }
-                });
-
-        // Atualiza campos básicos
         usuario.setNome(dto.getNome());
         usuario.setEmail(dto.getEmail());
         usuario.setIdioma(dto.getIdioma());
 
-        // Atualiza senha se nova senha foi informada e confirmada corretamente
-        if (dto.getNovaSenha() != null && !dto.getNovaSenha().isBlank()) {
-            if (!dto.getNovaSenha().equals(dto.getConfirmarSenha())) {
-                throw new RuntimeException("A nova senha e a confirmação não coincidem");
-            }
-            usuario.setSenha(encoder.encode(dto.getNovaSenha()));
+        if (senhaNovaInformada(dto)) {
+            validarConfirmacaoNovaSenha(dto.getNovaSenha(), dto.getConfirmarSenha());
+            usuario.setSenha(passwordEncoder.encode(dto.getNovaSenha()));
         }
 
-        // Atualiza foto se nova foto foi enviada
-        MultipartFile novaFoto = dto.getFoto();
-        if (novaFoto != null && !novaFoto.isEmpty()) {
-            try {
-                String nomeArquivo = arquivoService.salvarArquivo(novaFoto);
-                usuario.setFoto(nomeArquivo);
-            } catch (Exception e) {
-                throw new RuntimeException("Erro ao salvar nova foto", e);
-            }
+        if (dto.getFoto() != null && !dto.getFoto().isEmpty()) {
+            usuario.setFoto(arquivoService.salvarSeValido(dto.getFoto()));
         }
 
-        // Salva tudo
         usuarioRepository.save(usuario);
     }
 
+    /**
+     * Busca um usuário pelo ID.
+     *
+     * @param id Identificador do usuário.
+     * @return Objeto {@link Usuario} correspondente.
+     */
     public Usuario buscarUsuarioPorId(String id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado com id: " + id));
     }
 
-
-    public String buscarIdPorEmail(String email) {
-        return usuarioRepository.findByEmail(email)
-                .map(Usuario::getId)
-                .orElse(null);
+    /**
+     * Busca um usuário pelo e-mail.
+     *
+     * @param email O e-mail do usuário a ser buscado.
+     * @return Um {@link Optional} contendo o {@link Usuario} caso encontrado,
+     *         ou um {@code Optional.empty()} se nenhum usuário for encontrado com o e-mail informado.
+     */
+    public Optional<Usuario> buscarPorEmail(String email) {
+        return usuarioRepository.findByEmail(email);
     }
+
+
+    /* ================= MÉTODOS PRIVADOS DE SUPORTE ================= */
+
+    private void validarSenhaAtual(String senhaInformada, String senhaAtualCriptografada) {
+        if (!passwordEncoder.matches(senhaInformada, senhaAtualCriptografada)) {
+            throw new RuntimeException("Senha atual incorreta");
+        }
+    }
+
+    private void validarEmailNaoDuplicado(String novoEmail, String idUsuarioAtual) {
+        usuarioRepository.findByEmail(novoEmail).ifPresent(usuarioExistente -> {
+            if (!usuarioExistente.getId().equals(idUsuarioAtual)) {
+                throw new RuntimeException("E-mail já está em uso por outro usuário");
+            }
+        });
+    }
+
+    private boolean senhaNovaInformada(UsuarioEditDTO dto) {
+        return dto.getNovaSenha() != null && !dto.getNovaSenha().isBlank();
+    }
+
+    private void validarConfirmacaoNovaSenha(String novaSenha, String confirmarSenha) {
+        if (!novaSenha.equals(confirmarSenha)) {
+            throw new RuntimeException("A nova senha e a confirmação não coincidem");
+        }
+    }
+
 }

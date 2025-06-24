@@ -9,49 +9,45 @@ import com.manoela.blog.dto.CategoriaGraficoDTO;
 import com.manoela.blog.dto.CategoriaQuantidadeDTO;
 import com.manoela.blog.repository.CurtidaRepository;
 import com.manoela.blog.repository.PostagemRepository;
-import com.manoela.blog.repository.UsuarioRepository;
-import com.manoela.blog.util.IdiomaUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Serviço responsável pelo gerenciamento de curtidas em postagens.
+ * Serviço responsável por gerenciar as operações relacionadas às curtidas das postagens.
+ * <p>
+ * Este serviço permite alternar (toggle) o estado da curtida para um usuário e postagem,
+ * verificar se um usuário já curtiu uma postagem, contar curtidas, e obter dados estatísticos
+ * para gerar gráficos relacionados às curtidas por categoria.
+ * </p>
+ *
+ * @author Manoela Fernandes
+ * @since 1.0
  */
 @Service
 @RequiredArgsConstructor
 public class CurtidaService {
 
     private final CurtidaRepository curtidaRepository;
-    private final UsuarioRepository usuarioRepository;
     private final PostagemRepository postagemRepository;
-    private final CategoriaService  categoriaService;
+    private final CategoriaService categoriaService;
+    private final UsuarioService usuarioService;
 
-    public void curtir(String usuarioId, String postagemId) {
-        CurtidaId id = new CurtidaId(usuarioId, postagemId);
-
-        if (curtidaRepository.existsById(id)) {
-            throw new IllegalStateException("Usuário já curtiu esta postagem.");
-        }
-
-        Usuario usuario = buscarUsuario(usuarioId);
-        Postagem postagem = buscarPostagem(postagemId);
-
-        Curtida curtida = new Curtida(id, usuario, postagem, null);
-        curtidaRepository.save(curtida);
-    }
-
-    public void descurtir(String usuarioId, String postagemId) {
-        CurtidaId id = new CurtidaId(usuarioId, postagemId);
-
-        Curtida curtida = curtidaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Curtida não encontrada para remoção."));
-
-        curtidaRepository.delete(curtida);
-    }
-
+    /**
+     * Alterna a curtida de uma postagem por um usuário.
+     * <p>
+     * Se o usuário já curtiu a postagem, a curtida é removida.
+     * Caso contrário, uma nova curtida é adicionada.
+     * </p>
+     *
+     * @param usuarioId  o ID do usuário que realizará a ação de curtir ou descurtir
+     * @param postagemId o ID da postagem que será curtida ou descurtida
+     * @return {@code true} se a postagem foi curtida após a operação, {@code false} se a curtida foi removida
+     * @throws RuntimeException caso a postagem com o ID fornecido não seja encontrada
+     */
     public boolean toggleCurtida(String usuarioId, String postagemId) {
         CurtidaId id = new CurtidaId(usuarioId, postagemId);
 
@@ -61,21 +57,41 @@ public class CurtidaService {
                     return false;
                 })
                 .orElseGet(() -> {
-                    Usuario usuario = buscarUsuario(usuarioId);
-                    Postagem postagem = buscarPostagem(postagemId);
+                    Usuario usuario = usuarioService.buscarUsuarioPorId(usuarioId);
+                    Postagem postagem = postagemRepository.findById(postagemId)
+                            .orElseThrow(() -> new RuntimeException("Postagem não encontrada"));
                     curtidaRepository.save(new Curtida(id, usuario, postagem, null));
                     return true;
                 });
     }
 
+    /**
+     * Verifica se uma determinada postagem foi curtida por um usuário específico.
+     *
+     * @param usuarioId  o ID do usuário
+     * @param postagemId o ID da postagem
+     * @return {@code true} se o usuário curtiu a postagem, {@code false} caso contrário
+     */
     public boolean foiCurtidoPorUsuario(String usuarioId, String postagemId) {
         return curtidaRepository.existsByPostagemIdAndUsuarioId(postagemId, usuarioId);
     }
 
+    /**
+     * Obtém o total de curtidas de uma postagem.
+     *
+     * @param postagemId o ID da postagem
+     * @return a quantidade total de curtidas da postagem
+     */
     public int totalCurtidas(String postagemId) {
         return (int) curtidaRepository.countByPostagemId(postagemId);
     }
 
+    /**
+     * Conta o número de curtidas para uma lista de postagens.
+     *
+     * @param idsPostagens lista de IDs das postagens para as quais as curtidas serão contadas
+     * @return um mapa onde a chave é o ID da postagem e o valor é a quantidade de curtidas correspondentes
+     */
     public Map<String, Long> contarCurtidasPorPostagens(List<String> idsPostagens) {
         return curtidaRepository.contarCurtidasPorPostagens(idsPostagens)
                 .stream()
@@ -85,6 +101,13 @@ public class CurtidaService {
                 ));
     }
 
+    /**
+     * Busca os IDs das postagens curtidas por um usuário dentro de uma lista específica de postagens.
+     *
+     * @param usuarioId    o ID do usuário
+     * @param idsPostagens a lista de IDs das postagens para filtrar
+     * @return uma lista contendo os IDs das postagens que o usuário curtiu; retorna lista vazia se o ID do usuário for nulo ou em branco
+     */
     public List<String> buscarPostagensCurtidasPorUsuario(String usuarioId, List<String> idsPostagens) {
         if (usuarioId == null || usuarioId.isBlank()) return List.of();
 
@@ -94,19 +117,14 @@ public class CurtidaService {
                 .toList();
     }
 
-    // Métodos auxiliares internos
-    private Usuario buscarUsuario(String id) {
-        return usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado: " + id));
-    }
-
-    private Postagem buscarPostagem(String id) {
-        return postagemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Postagem não encontrada: " + id));
-    }
-
+    /**
+     * Busca os dados agregados de curtidas por categoria para um usuário,
+     * utilizados para a geração de gráficos.
+     *
+     * @param usuarioId o ID do usuário para filtrar as curtidas
+     * @return uma lista de objetos {@link CategoriaGraficoDTO} contendo o nome da categoria e a quantidade de curtidas
+     */
     public List<CategoriaGraficoDTO> buscarDadosCurtidasGrafico(String usuarioId) {
-
         List<CategoriaQuantidadeDTO> contagem = curtidaRepository.contarCurtidasPorCategoria(usuarioId);
 
         return contagem.stream()
@@ -117,5 +135,4 @@ public class CurtidaService {
                 })
                 .toList();
     }
-
 }

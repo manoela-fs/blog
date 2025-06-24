@@ -1,17 +1,17 @@
 package com.manoela.blog.controller;
 
 import com.manoela.blog.service.CurtidaService;
-import com.manoela.blog.security.CustomUserDetails; // ajuste o pacote conforme seu projeto
+import com.manoela.blog.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Controller para operações de curtida (like/unlike) em postagens.
+ * Controller para operações relacionadas a curtidas em postagens.
  */
 @RestController
 @RequestMapping("/post")
@@ -21,31 +21,27 @@ public class CurtidaController {
     private final CurtidaService curtidaService;
 
     /**
-     * Endpoint para alternar (toggle) a curtida de uma postagem pelo usuário autenticado.
+     * Alterna (toggle) a curtida de uma postagem para o usuário autenticado.
      *
-     * @param id  ID da postagem a ser curtida ou descurtida.
-     * @param userDetails Informações do usuário autenticado.
-     * @return ResponseEntity com o novo estado da curtida (true = curtida, false = descurtida).
+     * @param id          ID da postagem para curtir/descurtir.
+     * @param userDetails Dados do usuário autenticado.
+     * @return ResponseEntity com o estado da curtida e total de curtidas.
      */
     @PostMapping("/{id}/curtir")
-    public ResponseEntity<Map<String, Object>> toggleCurtida(
-            @PathVariable String id,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<?> toggleCurtida(@PathVariable String id,
+                                           @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         if (userDetails == null) {
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Usuário não autenticado."));
         }
 
-        String usuarioId = userDetails.getId();
-
-        boolean curtido = curtidaService.toggleCurtida(usuarioId, id);
+        boolean curtido = curtidaService.toggleCurtida(userDetails.getId(), id);
         int totalCurtidas = curtidaService.totalCurtidas(id);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("curtido", curtido);
-        response.put("totalCurtidas", totalCurtidas);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.of(
+                "curtido", curtido,
+                "totalCurtidas", totalCurtidas
+        ));
     }
-
 }

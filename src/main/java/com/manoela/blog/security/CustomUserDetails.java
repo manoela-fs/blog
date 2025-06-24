@@ -7,58 +7,102 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.UUID;
 
+/**
+ * Implementação personalizada de {@link UserDetails} para representar os dados
+ * do usuário autenticado na aplicação.
+ */
 @Getter
 public class CustomUserDetails implements UserDetails {
 
-    private Usuario usuario;
+    private final Usuario usuario;
 
+    /**
+     * Construtor que recebe a entidade {@link Usuario}.
+     *
+     * @param usuario Usuário autenticado.
+     */
     public CustomUserDetails(Usuario usuario) {
         this.usuario = usuario;
     }
 
+    /**
+     * Retorna a coleção de autoridades do usuário.
+     * No momento, o sistema não possui perfis específicos.
+     *
+     * @return Lista vazia de {@link GrantedAuthority}.
+     */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Sem roles, retorna lista vazia
         return Collections.emptyList();
     }
 
+    /**
+     * Retorna a senha criptografada do usuário.
+     *
+     * @return senha criptografada.
+     */
     @Override
     public String getPassword() {
         return usuario.getSenha();
     }
 
+    /**
+     * Retorna o e-mail do usuário como nome de login.
+     *
+     * @return e-mail do usuário.
+     */
     @Override
     public String getUsername() {
         return usuario.getEmail();
     }
 
+    /**
+     * Retorna o ID do usuário.
+     *
+     * @return ID como String.
+     */
     public String getId() {
         return usuario.getId();
     }
 
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
-    }
-
+    /**
+     * Informa se a conta está expirada.
+     *
+     * @return sempre {@code true} por padrão.
+     */
     @Override
     public boolean isAccountNonExpired() {
-        return true; // ajuste conforme sua regra de negócio
+        return true;
     }
 
+    /**
+     * Informa se a conta está bloqueada.
+     *
+     * @return sempre {@code true} por padrão.
+     */
     @Override
     public boolean isAccountNonLocked() {
-        return true; // ajuste conforme sua regra de negócio
+        return true;
     }
 
+    /**
+     * Informa se as credenciais estão expiradas.
+     *
+     * @return sempre {@code true} por padrão.
+     */
     @Override
     public boolean isCredentialsNonExpired() {
-        return true; // ajuste conforme sua regra de negócio
+        return true;
     }
 
+    /**
+     * Informa se a conta está habilitada.
+     *
+     * @return sempre {@code true} por padrão.
+     */
     @Override
     public boolean isEnabled() {
-        return true; // ajuste conforme sua regra de negócio
+        return true;
     }
 }

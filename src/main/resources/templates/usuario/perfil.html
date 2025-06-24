@@ -204,74 +204,8 @@
 
 </section>
 <div layout:fragment="scripts">
+    <script src="/js/curtidas.js"></script>
     <script>
-        async function toggleCurtida(button) {
-            const postId = button.getAttribute('data-post-id');
-            console.log('Botão clicado. postId:', postId);
-
-            try {
-                const response = await fetch(`/post/${postId}/curtir`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest' // indica requisição Ajax
-                    },
-                    credentials: 'same-origin'
-                });
-
-                console.log('Resposta recebida:', response);
-
-                // Se foi redirecionado para login (exemplo: redirect para /login)
-                if (response.redirected) {
-                    console.warn('Redirecionado para:', response.url);
-                    window.location.href = response.url; // redireciona o usuário
-                    return;
-                }
-
-                if (response.status === 401) {
-                    console.warn('Usuário não autenticado. Redirecionando...');
-                    window.location.href = '/login';
-                    return;
-                }
-
-                if (!response.ok) {
-                    console.error('Resposta não OK. Código:', response.status);
-                    alert('Erro ao atualizar curtida');
-                    return;
-                }
-
-                // Tenta interpretar o JSON, cuidado se a resposta não for JSON válido
-                const data = await response.json();
-                console.log('Dados recebidos:', data);
-
-                const icon = button.querySelector('i');
-                if (data.curtido) {
-                    icon.classList.remove('bi-heart');
-                    icon.classList.add('bi-heart-fill');
-                    button.classList.remove('text-muted');
-                    button.classList.add('text-danger');
-                } else {
-                    icon.classList.remove('bi-heart-fill');
-                    icon.classList.add('bi-heart');
-                    button.classList.remove('text-danger');
-                    button.classList.add('text-muted');
-                }
-
-                button.nextElementSibling.textContent = data.totalCurtidas;
-            } catch (error) {
-                console.error('Erro ao enviar curtida:', error);
-                alert('Erro de comunicação com o servidor');
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const botoes = document.querySelectorAll('button[data-post-id]');
-            console.log(`Adicionando listener a ${botoes.length} botão(ões).`);
-            botoes.forEach(button => {
-                button.addEventListener('click', () => toggleCurtida(button));
-            });
-        });
-
         function confirmarExclusao(el) {
             const postId = el.getAttribute('data-id');
             if (confirm("Tem certeza que deseja excluir esta postagem?")) {
@@ -282,9 +216,6 @@
             }
         }
     </script>
-
 </div>
-
-
 </body>
 </html>

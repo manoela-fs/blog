@@ -4,23 +4,27 @@ import com.manoela.blog.domain.usuario.Usuario;
 import com.manoela.blog.dto.CategoriaGraficoDTO;
 import com.manoela.blog.dto.PostagemDTO;
 import com.manoela.blog.dto.UsuarioEditDTO;
-import com.manoela.blog.security.CustomUserDetails; // ajuste o pacote conforme seu projeto
+import com.manoela.blog.security.SecurityUtil;
 import com.manoela.blog.service.CurtidaService;
 import com.manoela.blog.service.PostagemService;
 import com.manoela.blog.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.security.Principal;
 import java.util.List;
+import java.util.Locale;
 
+/**
+ * Controller para gerenciamento de usuários:
+ * exibição de perfil, edição do perfil e atividade do usuário.
+ */
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/usuario")
@@ -29,22 +33,31 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
     private final PostagemService postagemService;
     private final CurtidaService curtidaService;
+    private final MessageSource messageSource;
+    private final SecurityUtil securityUtil;
 
-    // Exibe perfil do usuário pelo id
+    /**
+     * Exibe o perfil do usuário pelo ID.
+     *
+     * @param id    ID do usuário cujo perfil será exibido.
+     * @param model modelo para a view.
+     * @return nome da view de perfil.
+     */
     @GetMapping("/{id}")
-    public String perfil(@PathVariable String id, Model model,
-                         @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-
+    public String perfil(@PathVariable String id, Model model) {
         Usuario donoPerfil = usuarioService.buscarUsuarioPorId(id);
+        Locale locale = LocaleContextHolder.getLocale();
 
-        boolean isOwner = customUserDetails != null &&
-                customUserDetails.getUsuario().getEmail().equals(donoPerfil.getEmail());
+        boolean isOwner = false;
+        String idUsuarioLogado = null;
+        try {
+            idUsuarioLogado = securityUtil.getIdUsuarioLogado();
+            isOwner = securityUtil.isDono(donoPerfil.getId());
+        } catch (SecurityException ignored) {
+            // Usuário não autenticado, segue normalmente
+        }
 
-        String idUsuarioLogado = customUserDetails != null ?
-                customUserDetails.getUsuario().getId() : null;
-
-        String idiomaAtual = LocaleContextHolder.getLocale().toLanguageTag();
-
+        String idiomaAtual = locale.toLanguageTag();
         List<PostagemDTO> postagensDTO = postagemService
                 .buscarPostagensDoUsuario(donoPerfil.getId(), idiomaAtual, idUsuarioLogado);
 
@@ -55,97 +68,112 @@ public class UsuarioController {
         return "usuario/perfil";
     }
 
-    // GET - formulário edição perfil do usuário logado
+    /**
+     * Exibe o formulário para edição do perfil do usuário logado.
+     *
+     * @param model             modelo para a view.
+     * @param redirectAttributes atributos para mensagens no redirecionamento.
+     * @return nome da view de edição ou redirecionamento para login se não autenticado.
+     */
     @GetMapping("/edit")
-    public String editarForm(Model model,
-                             @AuthenticationPrincipal CustomUserDetails customUserDetails,
-                             RedirectAttributes redirectAttributes) {
+    public String editarForm(Model model, RedirectAttributes redirectAttributes) {
+        try {
+            Usuario usuarioLogado = securityUtil.getUsuarioLogado();
 
-        if (customUserDetails == null) {
-            redirectAttributes.addFlashAttribute("error", "Usuário não autenticado.");
-            return "redirect:/login"; //
+            if (!model.containsAttribute("usuarioEditDTO")) {
+                UsuarioEditDTO dto = new UsuarioEditDTO();
+                dto.setNome(usuarioLogado.getNome());
+                dto.setEmail(usuarioLogado.getEmail());
+                dto.setIdioma(usuarioLogado.getIdioma());
+                dto.setFotoAtual(usuarioLogado.getFoto());
+
+                model.addAttribute("usuarioEditDTO", dto);
+            }
+
+            return "usuario/edit";
+        } catch (SecurityException e) {
+            String msg = messageSource.getMessage("usuario.nao.autenticado", null, LocaleContextHolder.getLocale());
+            redirectAttributes.addFlashAttribute("error", msg);
+            return "redirect:/login";
         }
-
-        String idUsuario = customUserDetails.getUsuario().getId();
-        Usuario usuario = usuarioService.buscarUsuarioPorId(idUsuario);
-
-        UsuarioEditDTO dto = new UsuarioEditDTO();
-        dto.setNome(usuario.getNome());
-        dto.setEmail(usuario.getEmail());
-        dto.setIdioma(usuario.getIdioma());
-        dto.setFotoAtual(usuario.getFoto());
-
-        model.addAttribute("usuarioEditDTO", dto);
-
-        return "usuario/edit";
     }
 
-    // POST - salvar edição do usuário logado
+    /**
+     * Processa o formulário de edição do perfil do usuário logado.
+     *
+     * @param dto                dados do formulário.
+     * @param bindingResult      resultado da validação.
+     * @param redirectAttributes atributos para mensagens no redirecionamento.
+     * @return redirecionamento para o perfil ou formulário em caso de erro.
+     */
     @PostMapping("/edit")
     public String editarSalvar(@Valid @ModelAttribute("usuarioEditDTO") UsuarioEditDTO dto,
                                BindingResult bindingResult,
-                               @AuthenticationPrincipal CustomUserDetails customUserDetails,
                                RedirectAttributes redirectAttributes) {
-
-        if (customUserDetails == null) {
-            System.out.println("Erro: Usuário não autenticado");
-            redirectAttributes.addFlashAttribute("error", "Usuário não autenticado.");
-            return "redirect:/login";
-        }
-
-        // Só pode editar o próprio perfil
-        if (!customUserDetails.getUsuario().getId().equals(customUserDetails.getUsuario().getId())) {
-            System.out.println("Erro: Acesso negado - Tentativa de editar outro usuário");
-            redirectAttributes.addFlashAttribute("error", "Acesso negado.");
-            return "redirect:/usuario/" + customUserDetails.getUsuario().getId();
-        }
-
-        // Validação: nova senha e confirmação devem bater se preenchidas
-        if (dto.getNovaSenha() != null && !dto.getNovaSenha().isBlank()) {
-            if (!dto.getNovaSenha().equals(dto.getConfirmarSenha())) {
-                System.out.println("Erro: Nova senha e confirmação não coincidem");
-                bindingResult.rejectValue("confirmarSenha", "error.confirmarSenha", "A nova senha e a confirmação não coincidem");
-            }
-        }
-
-        if (bindingResult.hasErrors()) {
-            System.out.println("Erros de validação encontrados:");
-            bindingResult.getAllErrors().forEach(error -> System.out.println(error.getDefaultMessage()));
-            return "usuario/edit";
-        }
+        Locale locale = LocaleContextHolder.getLocale();
 
         try {
-            System.out.println("Chamando usuarioService.editarUsuario...");
-            usuarioService.editarUsuario(dto, customUserDetails.getUsuario());
-            System.out.println("Editar usuário finalizado com sucesso.");
+            // Obtém o usuário logado da sessão
+            Usuario usuarioLogado = securityUtil.getUsuarioLogado();
+
+            // Valida nova senha e confirmação, se preenchidas
+            if (dto.getNovaSenha() != null && !dto.getNovaSenha().isBlank()) {
+                if (!dto.getNovaSenha().equals(dto.getConfirmarSenha())) {
+                    String msg = messageSource.getMessage("usuario.senha.confirmacao.invalida", null, locale);
+                    bindingResult.rejectValue("confirmarSenha", "error.confirmarSenha", msg);
+                }
+            }
+
+            if (bindingResult.hasErrors()) {
+                redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.usuarioEditDTO", bindingResult);
+                redirectAttributes.addFlashAttribute("usuarioEditDTO", dto);
+                return "redirect:/usuario/edit";
+            }
+
+            // Usa sempre o usuário logado para editar o perfil, sem depender de ID no DTO
+            usuarioService.editarUsuario(dto, usuarioLogado);
+
+            String successMsg = messageSource.getMessage("usuario.editar.sucesso", null, locale);
+            redirectAttributes.addFlashAttribute("success", successMsg);
+
+            return "redirect:/usuario/" + usuarioLogado.getId();
+
+        } catch (SecurityException e) {
+            String errorMsg = messageSource.getMessage("usuario.acesso.negado", null, locale);
+            redirectAttributes.addFlashAttribute("error", errorMsg);
+            return "redirect:/usuario/edit";
         } catch (RuntimeException e) {
-            System.out.println("Erro na edição do usuário: " + e.getMessage());
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            String errorMsg = messageSource.getMessage("usuario.editar.erro", null, locale);
+            redirectAttributes.addFlashAttribute("error", errorMsg);
+            redirectAttributes.addFlashAttribute("usuarioEditDTO", dto);
             return "redirect:/usuario/edit";
         }
-
-        redirectAttributes.addFlashAttribute("success", "Perfil atualizado com sucesso.");
-        System.out.println("Redirecionando para /usuario/" + customUserDetails.getUsuario().getId());
-        return "redirect:/usuario/" + customUserDetails.getUsuario().getId();
     }
 
+
+    /**
+     * Exibe a página de atividade do usuário logado,
+     * mostrando gráficos de postagens e curtidas por categoria.
+     *
+     * @param model modelo para a view.
+     * @return nome da view de atividade.
+     */
     @GetMapping("/atividade")
-    public String mostrarAtividade(Model model, Principal principal) {
-        String usuarioEmail = principal.getName();
-        String usuarioId = usuarioService.buscarIdPorEmail(usuarioEmail);
+    public String mostrarAtividade(Model model) {
+        try {
+            String usuarioId = securityUtil.getIdUsuarioLogado();
 
+            List<CategoriaGraficoDTO> dadosPostagens = postagemService.buscarDadosGrafico(usuarioId);
+            List<CategoriaGraficoDTO> dadosCurtidas = curtidaService.buscarDadosCurtidasGrafico(usuarioId);
 
-        // Dados do gráfico de postagens por categoria
-        List<CategoriaGraficoDTO> dadosPostagens = postagemService.buscarDadosGrafico(usuarioId);
+            model.addAttribute("dadosGrafico", dadosPostagens);
+            model.addAttribute("dadosGraficoCurtidas", dadosCurtidas);
 
-        // Dados do gráfico de curtidas por categoria
-        List<CategoriaGraficoDTO> dadosCurtidas = curtidaService.buscarDadosCurtidasGrafico(usuarioId);
-
-        model.addAttribute("dadosGrafico", dadosPostagens);
-        model.addAttribute("dadosGraficoCurtidas", dadosCurtidas);
-
-        return "usuario/atividade";
+            return "usuario/atividade";
+        } catch (SecurityException e) {
+            String msg = messageSource.getMessage("usuario.nao.autenticado", null, LocaleContextHolder.getLocale());
+            model.addAttribute("error", msg);
+            return "redirect:/login";
+        }
     }
-
-
 }

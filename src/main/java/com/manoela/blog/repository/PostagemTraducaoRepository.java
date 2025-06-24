@@ -9,27 +9,36 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Repositório para a entidade {@link PostagemTraducao}.
+ * Fornece métodos para consulta de traduções de postagens por idioma e IDs.
+ */
 @Repository
 public interface PostagemTraducaoRepository extends JpaRepository<PostagemTraducao, PostagemTraducaoId> {
 
-    // Buscar traduções por postagem
-    List<PostagemTraducao> findByPostagem_Id(String postagemId);
-
-    // Buscar tradução específica por postagem e idioma
-    PostagemTraducao findById_PostagemIdAndId_Idioma(String postagemId, String idioma);
-
-    // Buscar todas as postagens em um idioma específico
-    List<PostagemTraducao> findById_Idioma(String idioma);
-
+    /**
+     * Busca traduções de postagens pelo idioma e lista de IDs de postagens.
+     *
+     * @param idioma    idioma da tradução.
+     * @param postagemIds lista de IDs das postagens.
+     * @return lista de traduções correspondentes ao idioma e postagens informados.
+     */
     List<PostagemTraducao> findById_IdiomaAndId_PostagemIdIn(String idioma, List<String> postagemIds);
 
+    /**
+     * Busca traduções de postagens em determinado idioma,
+     * trazendo as postagens associadas, ordenadas pela data de criação descendente.
+     *
+     * @param idioma idioma da tradução.
+     * @return lista de traduções ordenadas por data de criação da postagem.
+     */
     @Query("""
-    SELECT pt
-    FROM PostagemTraducao pt
-    JOIN FETCH pt.postagem p
-    WHERE pt.id.idioma = :idioma
-    ORDER BY p.dataCriacao DESC
-""")
+        SELECT pt
+        FROM PostagemTraducao pt
+        JOIN FETCH pt.postagem p
+        WHERE pt.id.idioma = :idioma
+        ORDER BY p.dataCriacao DESC
+        """)
     List<PostagemTraducao> buscarPostagensTraduzidasPorIdiomaOrdenadas(@Param("idioma") String idioma);
 
 }
