@@ -51,11 +51,11 @@
                              th:src="${usuarioEditDTO.fotoAtual != null} ? '/uploads/images/' + ${usuarioEditDTO.fotoAtual} : ''"
                              alt="Preview da foto"
                              class="img-thumbnail my-2"
-                             style="max-height: 300px; display: [[${usuarioEditDTO.fotoAtual != null} ? 'block' : 'none']]">
-
+                             th:style="'max-height: 300px; display: ' + (${usuarioEditDTO.fotoAtual} != null ? 'block' : 'none')" />
 
                         <input type="file" class="form-control" id="foto" th:field="*{foto}" onchange="previewImagemSelecionada(this)">
                     </div>
+
 
                     <!-- Senha atual -->
                     <div class="form-group my-2">
