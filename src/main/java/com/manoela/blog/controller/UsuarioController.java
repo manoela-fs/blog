@@ -1,9 +1,11 @@
 package com.manoela.blog.controller;
 
 import com.manoela.blog.domain.usuario.Usuario;
+import com.manoela.blog.dto.CategoriaGraficoDTO;
 import com.manoela.blog.dto.PostagemDTO;
 import com.manoela.blog.dto.UsuarioEditDTO;
 import com.manoela.blog.security.CustomUserDetails; // ajuste o pacote conforme seu projeto
+import com.manoela.blog.service.CurtidaService;
 import com.manoela.blog.service.PostagemService;
 import com.manoela.blog.service.UsuarioService;
 import jakarta.validation.Valid;
@@ -16,6 +18,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.security.Principal;
 import java.util.List;
 
 @Controller
@@ -25,6 +28,7 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
     private final PostagemService postagemService;
+    private final CurtidaService curtidaService;
 
     // Exibe perfil do usuário pelo id
     @GetMapping("/{id}")
@@ -123,6 +127,24 @@ public class UsuarioController {
         redirectAttributes.addFlashAttribute("success", "Perfil atualizado com sucesso.");
         System.out.println("Redirecionando para /usuario/" + customUserDetails.getUsuario().getId());
         return "redirect:/usuario/" + customUserDetails.getUsuario().getId();
+    }
+
+    @GetMapping("/atividade")
+    public String mostrarAtividade(Model model, Principal principal) {
+        String usuarioEmail = principal.getName();
+        String usuarioId = usuarioService.buscarIdPorEmail(usuarioEmail);
+
+
+        // Dados do gráfico de postagens por categoria
+        List<CategoriaGraficoDTO> dadosPostagens = postagemService.buscarDadosGrafico(usuarioId);
+
+        // Dados do gráfico de curtidas por categoria
+        List<CategoriaGraficoDTO> dadosCurtidas = curtidaService.buscarDadosCurtidasGrafico(usuarioId);
+
+        model.addAttribute("dadosGrafico", dadosPostagens);
+        model.addAttribute("dadosGraficoCurtidas", dadosCurtidas);
+
+        return "usuario/atividade";
     }
 
 

@@ -1,12 +1,16 @@
 package com.manoela.blog.service;
 
+import com.manoela.blog.domain.categoria.CategoriaTraducao;
 import com.manoela.blog.domain.curtida.Curtida;
 import com.manoela.blog.domain.curtida.CurtidaId;
 import com.manoela.blog.domain.postagem.Postagem;
 import com.manoela.blog.domain.usuario.Usuario;
+import com.manoela.blog.dto.CategoriaGraficoDTO;
+import com.manoela.blog.dto.CategoriaQuantidadeDTO;
 import com.manoela.blog.repository.CurtidaRepository;
 import com.manoela.blog.repository.PostagemRepository;
 import com.manoela.blog.repository.UsuarioRepository;
+import com.manoela.blog.util.IdiomaUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +27,7 @@ public class CurtidaService {
     private final CurtidaRepository curtidaRepository;
     private final UsuarioRepository usuarioRepository;
     private final PostagemRepository postagemRepository;
+    private final CategoriaService  categoriaService;
 
     public void curtir(String usuarioId, String postagemId) {
         CurtidaId id = new CurtidaId(usuarioId, postagemId);
@@ -99,4 +104,18 @@ public class CurtidaService {
         return postagemRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Postagem não encontrada: " + id));
     }
+
+    public List<CategoriaGraficoDTO> buscarDadosCurtidasGrafico(String usuarioId) {
+
+        List<CategoriaQuantidadeDTO> contagem = curtidaRepository.contarCurtidasPorCategoria(usuarioId);
+
+        return contagem.stream()
+                .map(dto -> {
+                    CategoriaTraducao traducao = categoriaService.buscarCategoriaTraduzidaPorId(dto.getCategoriaId());
+                    String nomeCategoria = (traducao != null) ? traducao.getNome() : "Desconhecida";
+                    return new CategoriaGraficoDTO(nomeCategoria, dto.getQuantidade());
+                })
+                .toList();
+    }
+
 }

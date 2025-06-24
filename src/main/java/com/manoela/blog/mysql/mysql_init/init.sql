@@ -1,3 +1,4 @@
+/*!40101 SET NAMES utf8mb4 */;
 -- Apaga e recria o banco
 DROP DATABASE IF EXISTS blog_db;
 

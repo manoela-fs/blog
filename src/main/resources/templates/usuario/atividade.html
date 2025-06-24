@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      lang="pt-BR"
+      layout:decorate="~{layout/layout}">
+
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{usuario.atividade}">Minha Atividade</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container my-5">
+        <h2 class="text-center mb-4" th:text="#{usuario.atividade}">Minha Atividade</h2>
+
+        <div class="row justify-content-center gap-4">
+            <!-- Gráfico Postagens por Categoria -->
+            <div class="col-md-5 col-12 card shadow-sm p-4">
+                <h4 class="text-center mb-3" th:text="#{grafico.postagensPorCategoria}">Postagens por Categoria</h4>
+                <div class="d-flex justify-content-center" style="max-width: 350px; height: 350px; margin: auto;">
+                    <canvas id="graficoPostagens" style="width: 100%; height: 100%;"></canvas>
+                    <div id="msgSemPostagens" style="display:none; text-align:center; font-style: italic; color: #666; width: 100%; align-self: center;">
+                        <p th:text="#{msg.semPostagens}">Você ainda não fez nenhuma postagem.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico Curtidas por Categoria -->
+            <div class="col-md-5 col-12 card shadow-sm p-4">
+                <h4 class="text-center mb-3" th:text="#{grafico.curtidasPorCategoria}">Curtidas por Categoria</h4>
+                <div class="d-flex justify-content-center" style="max-width: 350px; height: 350px; margin: auto;">
+                    <canvas id="graficoCurtidas" style="width: 100%; height: 100%;"></canvas>
+                    <div id="msgSemCurtidas" style="display:none; text-align:center; font-style: italic; color: #666; width: 100%; align-self: center;">
+                        <p th:text="#{msg.semCurtidas}">Você ainda não curtiu nenhuma postagem.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Fragmento de scripts -->
+<div layout:fragment="scripts">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+        // Mensagens i18n para tooltip e labels
+        const msgQuantidadePostagens = /*[[#{grafico.quantidadePostagens}]]*/ 'Quantidade de Postagens';
+        const msgCurtidas = /*[[#{grafico.curtidas}]]*/ 'Curtidas';
+        const msgPostagens = /*[[#{msg.semPostagens}]]*/ 'Você ainda não fez nenhuma postagem.';
+        const msgCurtidasTexto = /*[[#{msg.semCurtidas}]]*/ 'Você ainda não curtiu nenhuma postagem.';
+
+        // Dados do gráfico de postagens
+        const dadosPostagens = [[${dadosGrafico}]];
+        const labelsPostagens = dadosPostagens.map(d => d.nomeCategoria);
+        const dadosPostagensQtd = dadosPostagens.map(d => d.quantidade);
+
+        // Dados do gráfico de curtidas
+        const dadosCurtidas = [[${dadosGraficoCurtidas}]];
+        const labelsCurtidas = dadosCurtidas.map(d => d.nomeCategoria);
+        const dadosCurtidasQtd = dadosCurtidas.map(d => d.quantidade);
+
+        const cores = [
+            '#4e79a7', // azul
+            '#f28e2b', // laranja
+            '#e15759', // vermelho
+            '#76b7b2', // verde água
+            '#59a14f', // verde
+            '#edc948', // amarelo
+            '#b07aa1', // roxo
+            '#ff9da7', // rosa
+            '#9c755f', // marrom
+            '#bab0ab'  // cinza
+        ];
+
+        // Função para criar gráfico ou mostrar mensagem
+        function criarGraficoOuMensagem(ctx, labels, data, idMsgSemDados, labelDataset, labelTooltip) {
+            if (!labels.length) {
+                // Esconde canvas e mostra mensagem
+                ctx.style.display = 'none';
+                document.getElementById(idMsgSemDados).style.display = 'flex';
+            } else {
+                // Esconde mensagem e mostra canvas
+                document.getElementById(idMsgSemDados).style.display = 'none';
+                ctx.style.display = 'block';
+
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: labelDataset,
+                            data: data,
+                            backgroundColor: cores,
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: { boxWidth: 15, padding: 10, font: { size: 12 } }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: context => {
+                                        const label = context.label || '';
+                                        const valor = context.raw || 0;
+                                        return `${label}: ${valor} ${labelTooltip}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Criar gráfico ou mostrar mensagem para postagens
+        criarGraficoOuMensagem(
+            document.getElementById('graficoPostagens'),
+            labelsPostagens,
+            dadosPostagensQtd,
+            'msgSemPostagens',
+            msgQuantidadePostagens,
+            'postagens'
+        );
+
+        // Criar gráfico ou mostrar mensagem para curtidas
+        criarGraficoOuMensagem(
+            document.getElementById('graficoCurtidas'),
+            labelsCurtidas,
+            dadosCurtidasQtd,
+            'msgSemCurtidas',
+            msgCurtidas,
+            'curtidas'
+        );
+
+        /*]]>*/
+    </script>
+</div>
+</body>
+</html>

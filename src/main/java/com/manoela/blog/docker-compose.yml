@@ -8,7 +8,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: 10203252
     volumes:
-      - ./mysql_init:/docker-entrypoint-initdb.d
+      - ./mysql/mysql_init:/docker-entrypoint-initdb.d
+      - ./mysql/mysql_config/my_custom.cnf:/etc/mysql/conf.d/my_custom.cnf
       - db_data:/var/lib/mysql
     ports:
       - "3306:3306"

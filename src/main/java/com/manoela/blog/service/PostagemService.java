@@ -2,12 +2,11 @@ package com.manoela.blog.service;
 
 import com.manoela.blog.client.LibreTranslateClient;
 import com.manoela.blog.domain.categoria.Categoria;
+import com.manoela.blog.domain.categoria.CategoriaTraducao;
 import com.manoela.blog.domain.postagem.Postagem;
 import com.manoela.blog.domain.postagem.PostagemTraducao;
 import com.manoela.blog.domain.usuario.Usuario;
-import com.manoela.blog.dto.PostagemCreateDTO;
-import com.manoela.blog.dto.PostagemDTO;
-import com.manoela.blog.dto.PostagemEditDTO;
+import com.manoela.blog.dto.*;
 import com.manoela.blog.repository.*;
 import com.manoela.blog.util.IdiomaUtil;
 import lombok.RequiredArgsConstructor;
@@ -261,5 +260,20 @@ public class PostagemService {
         return postagemRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Postagem não encontrada"));
     }
+
+    public List<CategoriaGraficoDTO> buscarDadosGrafico(String usuarioId) {
+
+        List<CategoriaQuantidadeDTO> contagem = postagemRepository.contarQuantidadePostagensPorCategoria(usuarioId);
+
+        return contagem.stream()
+                .map(dto -> {
+                    CategoriaTraducao traducao = categoriaService.buscarCategoriaTraduzidaPorId(dto.getCategoriaId());
+                    String nomeCategoria = (traducao != null) ? traducao.getNome() : "Desconhecida";
+                    return new CategoriaGraficoDTO(nomeCategoria, dto.getQuantidade());
+                })
+                .toList();
+    }
+
+
 
 }

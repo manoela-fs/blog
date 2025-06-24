@@ -32,9 +32,21 @@
                 <a th:href="@{/logout}" class="btn btn-danger ms-2" th:title="#{btn.logout}">
                     <i class="bi bi-box-arrow-left"></i>
                 </a>
-                <a th:href="@{/usuario/edit}" class="btn btn-secondary" th:title="#{btn.editProfile}">
-                    <i class="bi bi-gear"></i>
-                </a>
+
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" th:title="#{btn.profileOptions}">
+                        <i class="bi bi-gear"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" th:href="@{/usuario/edit}" th:text="#{btn.editProfile}">Editar Perfil</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" th:href="@{/usuario/atividade}" th:text="#{btn.myActivity}">Minha Atividade</a>
+                        </li>
+                    </ul>
+                </div>
+
             </div>
         </div>
 
