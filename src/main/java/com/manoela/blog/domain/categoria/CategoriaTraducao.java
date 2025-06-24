@@ -20,4 +20,5 @@ public class CategoriaTraducao {
 
     @Column(nullable = false)
     private String nome;
+
 }

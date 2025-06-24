@@ -59,7 +59,7 @@
 
                                     <div>
                                         <h6 class="m-0">
-                                            <a th:href="@{'/usuario/' + ${postagem.idUsuario}}"
+                                            <a th:href="@{'/usuario/' + ${postagem.usuarioId}}"
                                                class="text-decoration-none text-dark"
                                                th:text="${postagem.username}">Autor</a>
                                         </h6>
@@ -110,7 +110,7 @@
 
                             <div>
                                 <h6 class="m-0">
-                                    <a th:href="@{'/usuario/' + ${postagem.idUsuario}}"
+                                    <a th:href="@{'/usuario/' + ${postagem.usuarioId}}"
                                        class="text-decoration-none text-dark"
                                        th:text="${postagem.username}">Autor</a>
                                 </h6>

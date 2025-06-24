@@ -28,6 +28,19 @@ public class CategoriaService {
     }
 
     /**
+     * Retorna uma categoria traduzida específica pelo ID e idioma atual.
+     *
+     * @param idCategoria o ID da categoria original
+     * @return a CategoriaTraducao correspondente
+     */
+    public CategoriaTraducao buscarCategoriaTraduzidaPorId(Integer idCategoria) {
+        String idiomaAtual = LocaleContextHolder.getLocale().toLanguageTag();
+
+        return categoriaTraducaoRepository.findById_CategoriaIdAndId_Idioma(idCategoria, idiomaAtual);
+    }
+
+
+    /**
      * Busca uma categoria por ID.
      *
      * @param id identificador da categoria.

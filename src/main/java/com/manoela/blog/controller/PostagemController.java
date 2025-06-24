@@ -10,6 +10,7 @@ import com.manoela.blog.dto.PostagemCreateDTO;
 import com.manoela.blog.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -87,6 +88,32 @@ public class PostagemController {
             return "postagem/create";
         }
     }
+
+    @GetMapping("/{id}/show")
+    public String mostrarPostagem(@PathVariable String id,
+                                  Model model,
+                                  @AuthenticationPrincipal CustomUserDetails userDetails,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            Postagem postagem = postagemService.buscarPostagemPorId(id);
+            String idiomaAtual = (userDetails != null) ?
+                    userDetails.getUsuario().getIdioma() :
+                    LocaleContextHolder.getLocale().toLanguageTag();
+
+            PostagemDTO dto = postagemService.converterParaDTO(postagem, idiomaAtual,
+                    userDetails != null ? userDetails.getId() : null);
+
+            model.addAttribute("postagem", dto);
+
+            return "postagem/show";
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("mensagem", "Postagem não encontrada.");
+            redirectAttributes.addFlashAttribute("tipoMensagem", "danger");
+            return "redirect:/post/feed";
+        }
+    }
+
 
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable String id,

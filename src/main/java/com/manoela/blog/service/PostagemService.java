@@ -154,7 +154,8 @@ public class PostagemService {
                     curtido,
                     usuario.getNome(),
                     usuario.getFoto(),
-                    usuario.getId()
+                    usuario.getId(),
+                    categoriaService.buscarCategoriaTraduzidaPorId(post.getCategoria().getId()).getNome()
             );
         }).toList();
     }
@@ -189,7 +190,8 @@ public class PostagemService {
                             curtido,
                             usuario != null ? usuario.getNome() : null,
                             usuario != null ? usuario.getFoto() : null,
-                            usuario != null ? usuario.getId() : null
+                            usuario != null ? usuario.getId() : null,
+                            categoriaService.buscarCategoriaTraduzidaPorId(p.getCategoria().getId()).getNome()
                     );
                 }).toList();
     }
@@ -221,11 +223,39 @@ public class PostagemService {
                             idsCurtidos.contains(post.getId()),
                             usuario != null ? usuario.getNome() : null,
                             usuario != null ? usuario.getFoto() : null,
-                            usuario != null ? usuario.getId() : null
+                            usuario != null ? usuario.getId() : null,
+                            categoriaService.buscarCategoriaTraduzidaPorId(post.getCategoria().getId()).getNome()
                     );
                 })
                 .toList();
     }
+
+    public PostagemDTO converterParaDTO(Postagem postagem, String idioma, String idUsuarioLogado) {
+        String idPostagem = postagem.getId();
+
+        PostagemTraducao traducao = traducaoService.buscarTraducao(postagem, idioma);
+
+        long totalCurtidas = curtidaService.totalCurtidas(idPostagem);
+        boolean curtido = idUsuarioLogado != null &&
+                curtidaService.foiCurtidoPorUsuario(idUsuarioLogado, idPostagem);
+
+        Usuario usuario = postagem.getUsuario();
+
+        return new PostagemDTO(
+                postagem.getId(),
+                traducao != null ? traducao.getTitulo() : "",
+                traducao != null ? traducao.getConteudo() : "",
+                postagem.getImagem(),
+                postagem.getDataCriacao(),
+                totalCurtidas,
+                curtido,
+                usuario != null ? usuario.getNome() : null,
+                usuario != null ? usuario.getFoto() : null,
+                usuario != null ? usuario.getId() : null,
+                categoriaService.buscarCategoriaTraduzidaPorId(postagem.getCategoria().getId()).getNome()
+        );
+    }
+
 
     public Postagem buscarPostagemPorId(String id) {
         return postagemRepository.findById(id)

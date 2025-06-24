@@ -19,6 +19,7 @@ public class PostagemDTO {
     private boolean curtidoPeloUsuario;
     private String username;
     private String foto;
-    private String idUsuario;
+    private String usuarioId;
+    private String categoria;
 
 }
