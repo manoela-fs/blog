@@ -252,12 +252,12 @@ public class PostagemService {
      * Converte uma entidade {@link Postagem} para o DTO correspondente, com base no idioma.
      *
      * @param postagem          entidade de postagem
-     * @param idioma            idioma da tradução
      * @param idUsuarioLogado   ID do usuário autenticado
      * @return {@link PostagemDTO} com os dados prontos para exibição
      */
-    public PostagemDTO converterParaDTO(Postagem postagem, String idioma, String idUsuarioLogado) {
-        PostagemTraducao traducao = traducaoService.buscarTraducao(postagem, idioma);
+    public PostagemDTO converterParaDTO(Postagem postagem, String idUsuarioLogado) {
+        String idiomaAtual = LocaleContextHolder.getLocale().toLanguageTag();
+        PostagemTraducao traducao = traducaoService.buscarTraducao(postagem, idiomaAtual);
         String idPostagem = postagem.getId();
 
         long totalCurtidas = curtidaService.totalCurtidas(idPostagem);

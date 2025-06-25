@@ -55,7 +55,7 @@ public class SecurityConfig {
                                 "/register",
                                 "/usuario/*",
                                 "/post/feed",
-                                "/post/feed/*/show"
+                                "/post/*/show"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

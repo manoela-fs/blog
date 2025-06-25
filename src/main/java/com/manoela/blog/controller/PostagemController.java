@@ -124,11 +124,7 @@ public class PostagemController {
         try {
             Postagem postagem = postagemService.buscarPostagemPorId(id);
 
-            String idiomaAtual = userDetails != null ?
-                    userDetails.getUsuario().getIdioma() :
-                    LocaleContextHolder.getLocale().toLanguageTag();
-
-            PostagemDTO dto = postagemService.converterParaDTO(postagem, idiomaAtual,
+            PostagemDTO dto = postagemService.converterParaDTO(postagem,
                     userDetails != null ? userDetails.getId() : null);
 
             model.addAttribute("postagem", dto);
