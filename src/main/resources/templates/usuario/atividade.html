@@ -47,20 +47,17 @@
 
     <script th:inline="javascript">
         /*<![CDATA[*/
-
-        // Mensagens i18n para tooltip e labels
         const msgQuantidadePostagens = /*[[#{grafico.quantidadePostagens}]]*/ 'Quantidade de Postagens';
         const msgCurtidas = /*[[#{grafico.curtidas}]]*/ 'Curtidas';
         const msgPostagens = /*[[#{msg.semPostagens}]]*/ 'Você ainda não fez nenhuma postagem.';
         const msgCurtidasTexto = /*[[#{msg.semCurtidas}]]*/ 'Você ainda não curtiu nenhuma postagem.';
 
-        // Dados do gráfico de postagens
-        const dadosPostagens = [[${dadosGrafico}]];
+        const dadosPostagens = /*[[${dadosGrafico}]]*/ [];
+        const dadosCurtidas = /*[[${dadosGraficoCurtidas}]]*/ [];
+
         const labelsPostagens = dadosPostagens.map(d => d.nomeCategoria);
         const dadosPostagensQtd = dadosPostagens.map(d => d.quantidade);
 
-        // Dados do gráfico de curtidas
-        const dadosCurtidas = [[${dadosGraficoCurtidas}]];
         const labelsCurtidas = dadosCurtidas.map(d => d.nomeCategoria);
         const dadosCurtidasQtd = dadosCurtidas.map(d => d.quantidade);
 

@@ -63,16 +63,27 @@
             <div class="row justify-content-center">
                 <div class="col-12 col-md-10">
 
-                    <div th:if="${mensagem != null}"
-                         th:class="'alert alert-' + ${tipoMensagem} + ' alert-dismissible fade show'"
-                         role="alert">
-                        <span th:text="${mensagem}">Aqui vai a mensagem</span>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <!-- Alerta de sucesso -->
+                    <div th:if="${success}"
+                         class="alert alert-success col-12 col-md-5 mx-auto mb-4 text-center"
+                         th:text="${success}">
+                        Mensagem de sucesso.
                     </div>
 
-                    <div th:if="${#lists.isEmpty(postagens)}" class="alert alert-warning text-center" th:text="#{perfil.noPosts}">
+                    <!-- Alerta de erro -->
+                    <div th:if="${error}"
+                         class="alert alert-danger col-12 col-md-5 mx-auto mb-4 text-center"
+                         th:text="${error}">
+                        Mensagem de erro.
+                    </div>
+
+                    <!-- Alerta para lista vazia com mensagem i18n -->
+                    <div th:if="${#lists.isEmpty(postagens)}"
+                         class="alert alert-warning text-center"
+                         th:text="#{perfil.noPosts}">
                         Este usuário ainda não possui publicações.
                     </div>
+
 
                     <div th:each="postagem : ${postagens}" class="card mb-4 shadow-sm">
                         <div class="row g-0">

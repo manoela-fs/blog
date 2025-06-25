@@ -15,6 +15,24 @@
         <div class="d-flex justify-content-center">
             <div class="col-8 border rounded p-4 shadow-lg">
                 <h1 class="text-center mb-4" th:text="#{post.criar.titulo}">Criar Novo Post</h1>
+
+                <!-- Alertas de sucesso e erro -->
+                <div th:if="${success}"
+                     class="alert alert-success alert-dismissible fade show"
+                     role="alert"
+                     th:text="${success}">
+                    Mensagem de sucesso.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+
+                <div th:if="${error}"
+                     class="alert alert-danger alert-dismissible fade show"
+                     role="alert"
+                     th:text="${error}">
+                    Mensagem de erro.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+
                 <form th:action="@{/post/create}" method="post" enctype="multipart/form-data" th:object="${postagemCreateDTO}">
 
                     <div class="form-group">
@@ -32,11 +50,10 @@
                         <select th:field="*{categoriaId}" name="categoriaId" id="categoriaId" required>
                             <option value="" disabled selected>Selecione uma categoria</option>
                             <option th:each="categoria : ${categorias}"
-                                    th:value="${categoria.categoria.getId()}"
+                                    th:value="${categoria.categoria.id}"
                                     th:text="${categoria.nome}">
                             </option>
                         </select>
-
                     </div>
 
                     <div class="form-group my-2">

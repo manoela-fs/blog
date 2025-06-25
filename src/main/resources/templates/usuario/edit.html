@@ -16,6 +16,23 @@
             <div class="col-8 border rounded p-4 shadow-lg">
                 <h1 class="text-center mb-4" th:text="#{usuario.editar.titulo}">Editar Perfil</h1>
 
+                <!-- Alertas de sucesso e erro -->
+                <div th:if="${success}"
+                     class="alert alert-success alert-dismissible fade show"
+                     role="alert"
+                     th:text="${success}">
+                    Mensagem de sucesso.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+
+                <div th:if="${error}"
+                     class="alert alert-danger alert-dismissible fade show"
+                     role="alert"
+                     th:text="${error}">
+                    Mensagem de erro.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+
                 <form th:action="@{'/usuario/edit'}"
                       method="post"
                       enctype="multipart/form-data"
@@ -55,7 +72,6 @@
 
                         <input type="file" class="form-control" id="foto" th:field="*{foto}" onchange="previewImagemSelecionada(this)">
                     </div>
-
 
                     <!-- Senha atual -->
                     <div class="form-group my-2">

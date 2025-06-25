@@ -54,7 +54,6 @@ public class UsuarioController {
             idUsuarioLogado = securityUtil.getIdUsuarioLogado();
             isOwner = securityUtil.isDono(donoPerfil.getId());
         } catch (SecurityException ignored) {
-            // Usuário não autenticado, segue normalmente
         }
 
         String idiomaAtual = locale.toLanguageTag();
@@ -120,17 +119,19 @@ public class UsuarioController {
             if (dto.getNovaSenha() != null && !dto.getNovaSenha().isBlank()) {
                 if (!dto.getNovaSenha().equals(dto.getConfirmarSenha())) {
                     String msg = messageSource.getMessage("usuario.senha.confirmacao.invalida", null, locale);
-                    bindingResult.rejectValue("confirmarSenha", "error.confirmarSenha", msg);
+                    bindingResult.rejectValue("error", "error.confirmarSenha", msg);
                 }
             }
 
             if (bindingResult.hasErrors()) {
+                dto.setFotoAtual(usuarioLogado.getFoto());
+
                 redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.usuarioEditDTO", bindingResult);
                 redirectAttributes.addFlashAttribute("usuarioEditDTO", dto);
                 return "redirect:/usuario/edit";
             }
 
-            // Usa sempre o usuário logado para editar o perfil, sem depender de ID no DTO
+            // Usa sempre o usuário logado para editar o perfil
             usuarioService.editarUsuario(dto, usuarioLogado);
 
             String successMsg = messageSource.getMessage("usuario.editar.sucesso", null, locale);
@@ -143,12 +144,17 @@ public class UsuarioController {
             redirectAttributes.addFlashAttribute("error", errorMsg);
             return "redirect:/usuario/edit";
         } catch (RuntimeException e) {
+            // Também preenche fotoAtual aqui para o caso de erro geral
+            Usuario usuarioLogado = securityUtil.getUsuarioLogado();
+            dto.setFotoAtual(usuarioLogado.getFoto());
+
             String errorMsg = messageSource.getMessage("usuario.editar.erro", null, locale);
             redirectAttributes.addFlashAttribute("error", errorMsg);
             redirectAttributes.addFlashAttribute("usuarioEditDTO", dto);
             return "redirect:/usuario/edit";
         }
     }
+
 
 
     /**

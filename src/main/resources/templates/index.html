@@ -1,10 +1,69 @@
-<!-- templates/home.html -->
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="pt-br">
+<html lang="pt-BR"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+
+<head>
+    <title th:text="#{home.titulo}">DailyLog</title>
+</head>
+
 <body>
-<div th:fragment="content">
-    <h1>Bem-vindo ao meu blog!</h1>
-    <p>Conteúdo da página inicial aqui.</p>
-</div>
+
+<main layout:fragment="content">
+    <section class="text-center mb-5 mt-5">
+        <h1 class="display-4 fw-bold" th:text="#{home.titulo}">Bem-vindo ao DailyLog</h1>
+        <p class="lead mt-3" th:text="#{home.descricao}">
+            Seu diário digital para registrar, refletir e compartilhar.
+        </p>
+        <div class="mt-4">
+            <a th:href="@{/post/feed}" class="btn btn-primary btn-lg me-2">
+                <i class="bi bi-journal-text"></i> <span th:text="#{home.btn.explorar}">Explorar postagens</span>
+            </a>
+            <a th:href="@{/register}" class="btn btn-outline-secondary btn-lg">
+                <i class="bi bi-person-plus"></i> <span th:text="#{home.btn.registrar}">Criar conta</span>
+            </a>
+        </div>
+    </section>
+
+    <section class="row text-center">
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow h-100">
+                <div class="card-body">
+                    <i class="bi bi-pencil-square fs-2 text-primary"></i>
+                    <h5 class="card-title mt-3" th:text="#{home.card.registrar.titulo}">Registre seu dia</h5>
+                    <p class="card-text" th:text="#{home.card.registrar.texto}">
+                        Escreva sobre seus aprendizados, experiências e momentos.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow h-100">
+                <div class="card-body">
+                    <i class="bi bi-graph-up-arrow fs-2 text-success"></i>
+                    <h5 class="card-title mt-3" th:text="#{home.card.acompanhar.titulo}">Acompanhe sua atividade</h5>
+                    <p class="card-text" th:text="#{home.card.acompanhar.texto}">
+                        Tenha uma visão clara das suas criações e interações.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow h-100">
+                <div class="card-body">
+                    <i class="bi bi-globe fs-2 text-info"></i>
+                    <h5 class="card-title mt-3" th:text="#{home.card.compartilhar.titulo}">Compartilhe com o mundo</h5>
+                    <p class="card-text" th:text="#{home.card.compartilhar.texto}">
+                        Deixe suas postagens públicas e inspire outras pessoas.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
 </body>
 </html>

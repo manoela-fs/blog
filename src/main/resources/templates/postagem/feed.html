@@ -12,21 +12,13 @@
 <body>
 <section layout:fragment="content">
     <div class="container mt-5">
-        <h1 class="text-center mb-4">Feed de Postagens</h1>
-
-        <!-- Mensagem de alerta (caso exista) -->
-        <div th:if="${mensagem != null}"
-             th:class="'alert alert-' + ${tipoMensagem} + ' alert-dismissible fade show'"
-             role="alert">
-            <span th:text="${mensagem}">Mensagem</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+        <h1 class="text-center mb-4" th:text="#{feed.titulo}">Feed de Postagens</h1>
 
         <!-- Caso não haja postagens -->
-        <div th:if="${#lists.isEmpty(postagens)}" class="alert alert-info text-center">
+        <div th:if="${#lists.isEmpty(postagens)}" class="alert alert-info text-center" th:text="#{feed.semPostagens}">
             Nenhuma postagem disponível no momento.
         </div>
-
+        
         <!-- Postagens -->
         <div class="row justify-content-center" th:each="postagem : ${postagens}">
             <div class="col-12 col-md-10 mb-4">
