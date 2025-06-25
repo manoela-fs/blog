@@ -1,0 +1,14 @@
+com.manoela.blog
+com.manoela.blog.client
+com.manoela.blog.config
+com.manoela.blog.controller
+com.manoela.blog.domain.categoria
+com.manoela.blog.domain.comentario
+com.manoela.blog.domain.curtida
+com.manoela.blog.domain.postagem
+com.manoela.blog.domain.usuario
+com.manoela.blog.dto
+com.manoela.blog.repository
+com.manoela.blog.security
+com.manoela.blog.service
+com.manoela.blog.util

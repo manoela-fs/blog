@@ -13,22 +13,35 @@ import java.nio.file.Paths;
 import java.util.Locale;
 
 /**
- * Configuração Web para internacionalização e localização da aplicação.
+ * Configuração web da aplicação responsável pela
+ * internacionalização (i18n) e localização (l10n).
  *
- * <p>Configura o {@link LocaleResolver} para definir o idioma padrão da aplicação e
- * o {@link LocaleChangeInterceptor} para permitir a troca dinâmica do idioma via parâmetro na URL.</p>
+ * <p>
+ * Define o idioma padrão da aplicação e possibilita a troca dinâmica
+ * de idioma via parâmetro na URL. Além disso, configura o mapeamento
+ * para recursos estáticos como arquivos enviados (uploads).
+ * </p>
  *
- * <p>Implementa {@link WebMvcConfigurer} para possibilitar customizações adicionais na configuração do MVC.</p>
+ * <p>
+ * Implementa {@link WebMvcConfigurer} para adicionar interceptadores
+ * e gerenciar recursos estáticos.
+ * </p>
+ *
+ * @author Manoela Fernandes
+ * @since 1.0
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
     /**
-     * Define o resolvedor de idioma baseado em sessão.
+     * Cria um {@link LocaleResolver} que utiliza sessão para armazenar
+     * o idioma selecionado pelo usuário.
      *
-     * <p>Define o idioma padrão da aplicação como Português do Brasil ("pt-BR").</p>
+     * <p>
+     * O idioma padrão configurado é Português do Brasil (pt-BR).
+     * </p>
      *
-     * @return {@link LocaleResolver} configurado com o idioma padrão.
+     * @return Instância configurada de {@link LocaleResolver}.
      */
     @Bean
     public LocaleResolver localeResolver() {
@@ -38,11 +51,15 @@ public class WebConfig implements WebMvcConfigurer {
     }
 
     /**
-     * Intercepta requisições para alterar o idioma da aplicação.
+     * Cria um {@link LocaleChangeInterceptor} que permite a troca
+     * do idioma da aplicação por meio do parâmetro "lang" na URL.
      *
-     * <p>O idioma pode ser alterado dinamicamente através do parâmetro "lang" na URL, por exemplo: <code>?lang=en</code>.</p>
+     * <p>
+     * Por exemplo, acessando uma URL com <code>?lang=en</code> muda
+     * o idioma para inglês.
+     * </p>
      *
-     * @return {@link LocaleChangeInterceptor} configurado para o parâmetro "lang".
+     * @return Instância configurada de {@link LocaleChangeInterceptor}.
      */
     @Bean
     public LocaleChangeInterceptor localeChangeInterceptor() {
@@ -51,14 +68,33 @@ public class WebConfig implements WebMvcConfigurer {
         return interceptor;
     }
 
+    /**
+     * Registra interceptadores do Spring MVC.
+     *
+     * <p>
+     * Adiciona o {@link LocaleChangeInterceptor} para que ele seja
+     * aplicado nas requisições HTTP.
+     * </p>
+     *
+     * @param registry O registro de interceptadores MVC.
+     */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(localeChangeInterceptor());
     }
 
+    /**
+     * Registra os manipuladores de recursos estáticos.
+     *
+     * <p>
+     * Mapeia a URL "/uploads/**" para servir arquivos da pasta física
+     * "uploads" no sistema de arquivos local.
+     * </p>
+     *
+     * @param registry O registro de manipuladores de recursos estáticos.
+     */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Caminho absoluto até a pasta uploads
         String caminhoUploads = Paths.get("uploads").toAbsolutePath().toUri().toString();
 
         registry.addResourceHandler("/uploads/**")

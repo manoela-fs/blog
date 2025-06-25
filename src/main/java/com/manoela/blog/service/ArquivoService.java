@@ -10,18 +10,25 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
+/**
+ * Serviço responsável pelo gerenciamento de arquivos,
+ * incluindo salvar e excluir arquivos no diretório configurado.
+ */
 @Service
 public class ArquivoService {
 
+    /**
+     * Diretório base para upload de arquivos, configurado no application.properties.
+     */
     @Value("${upload.dir}")
     private String uploadDir;
 
     /**
-     * Salva um arquivo no diretório configurado, gerando um nome único.
+     * Salva um arquivo recebido no diretório de upload, gerando um nome único para evitar conflitos.
      *
-     * @param file Arquivo a ser salvo.
-     * @return Nome do arquivo salvo.
-     * @throws IOException se ocorrer erro ao salvar o arquivo.
+     * @param file arquivo a ser salvo, representado como {@link MultipartFile}.
+     * @return o nome único do arquivo salvo.
+     * @throws IOException caso ocorra erro durante a criação do diretório ou salvamento do arquivo.
      */
     public String salvarArquivo(MultipartFile file) throws IOException {
         Path dirPath = Paths.get(uploadDir);
@@ -35,9 +42,10 @@ public class ArquivoService {
     }
 
     /**
-     * Exclui um arquivo do sistema, caso ele exista no diretório de upload.
+     * Exclui um arquivo do diretório de upload, se ele existir.
+     * Caso ocorra erro durante a exclusão, será exibida mensagem de erro no console.
      *
-     * @param nomeArquivo Nome do arquivo a ser excluído.
+     * @param nomeArquivo nome do arquivo a ser excluído.
      */
     public void excluirArquivo(String nomeArquivo) {
         try {
@@ -49,10 +57,13 @@ public class ArquivoService {
     }
 
     /**
-     * Salva o arquivo apenas se for válido (não nulo e não vazio).
+     * Salva o arquivo somente se ele for válido (não nulo e não vazio).
+     * Caso o arquivo seja inválido, retorna {@code null}.
+     * Se ocorrer erro ao salvar, lança uma RuntimeException.
      *
-     * @param arquivo Arquivo enviado pelo usuário.
-     * @return Nome do arquivo salvo ou null se for inválido.
+     * @param arquivo arquivo enviado pelo usuário.
+     * @return o nome do arquivo salvo ou {@code null} se o arquivo for inválido.
+     * @throws RuntimeException se ocorrer erro ao salvar o arquivo.
      */
     public String salvarSeValido(MultipartFile arquivo) {
         if (arquivo != null && !arquivo.isEmpty()) {
@@ -64,6 +75,5 @@ public class ArquivoService {
         }
         return null;
     }
-
 
 }
