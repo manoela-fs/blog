@@ -68,7 +68,14 @@ Abra o projeto em sua IDE e execute a classe `BlogApplication` como uma aplicaç
 [http://localhost:8080](http://localhost:8080)
 
 
-### 👩‍💻 Autoria
+## Devlog do Projeto
+
+Durante o desenvolvimento do DailyLog, foram registradas as principais etapas, desafios e aprendizados.
+
+Para acessar o devlog completo em formato PDF, clique no link abaixo:
+
+[Devlog Completo - PDF](https://drive.google.com/file/d/1fhOa1uAxDIM9tChgp748oKHrweJeJAwc/view?usp=sharing)
+
+## 👩‍💻 Autoria
 
 Projeto desenvolvido por **Manoela Fernandes Simão** como parte da disciplina **Laboratório de Desenvolvimento de Sistemas** no curso de **Ciência da Computação** do **Instituto Federal de Santa Catarina (IFSC)** — Campus Lages.
-
