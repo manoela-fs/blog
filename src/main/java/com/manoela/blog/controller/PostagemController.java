@@ -210,7 +210,9 @@ public class PostagemController {
         }
 
         try {
-            securityUtil.validarSeEhDono(dto.getId());
+            Postagem postagem = postagemService.buscarPostagemPorId(dto.getId());
+            securityUtil.validarSeEhDono(postagem.getUsuario().getId());
+
             postagemService.salvarEdicao(dto, securityUtil.getUsuarioLogado());
 
             String msg = messageSource.getMessage("post.editar.sucesso", null, locale);
