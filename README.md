@@ -43,7 +43,7 @@ A aplicação foi desenvolvida em Java com **Spring Boot**, utilizando **MySQL**
 ### 🔧 Pré-requisitos
 
 - Docker e Docker Compose instalados
-- JDK 24 configurado na sua IDE (IntelliJ, Eclipse, etc.)
+- JDK 17 configurado na sua IDE (IntelliJ, Eclipse, etc.)
 
 ### 📥 Clone o repositório
 
