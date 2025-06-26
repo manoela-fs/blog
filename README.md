@@ -76,6 +76,19 @@ Para acessar o devlog completo em formato PDF, clique no link abaixo:
 
 [Devlog Completo - PDF](https://drive.google.com/file/d/1fhOa1uAxDIM9tChgp748oKHrweJeJAwc/view?usp=sharing)
 
+## 📘 Relatório Final
+
+O relatório completo do projeto, contendo descrição técnica, justificativas de escolha de tecnologias, modelagem e outros aspectos de desenvolvimento, está disponível no link abaixo:
+
+[📄 Acessar Relatório (PDF)](https://drive.google.com/file/d/117ioDB-WopJYUrMB3Do-VudOnDrX4T_X/view?usp=sharing)
+
+## 📚 Documentação Javadoc
+
+A documentação da aplicação gerada com Javadoc pode ser consultada clicando no link abaixo:
+
+[📂 Acessar Javadoc](https://drive.google.com/drive/folders/1KKSuMxuxbWvwUNwSk5tdFDirjByTg5KZ?usp=sharing)
+
+
 ## 👩‍💻 Autoria
 
 Projeto desenvolvido por **Manoela Fernandes Simão** como parte da disciplina **Laboratório de Desenvolvimento de Sistemas** no curso de **Ciência da Computação** do **Instituto Federal de Santa Catarina (IFSC)** — Campus Lages.
