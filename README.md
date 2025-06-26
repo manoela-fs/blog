@@ -28,7 +28,7 @@ A aplicação foi desenvolvida em Java com **Spring Boot**, utilizando **MySQL**
 
 ## 🚀 Tecnologias Utilizadas
 
-- **Java 24 (JDK 24)**
+- **Java 17 (JDK 17)**
 - **Spring Boot**
 - **Spring Security**
 - **Spring Data JPA**
